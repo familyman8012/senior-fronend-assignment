@@ -1,5 +1,4 @@
-const { faker } = require('@faker-js/faker');
-
+import { faker } from '@faker-js/faker';
 
 function getImageResponce(requestBody) {
 
@@ -19,6 +18,7 @@ function getImageResponce(requestBody) {
 }
 
 
-module.exports = {
+
+export {
   getImageResponce,
 };

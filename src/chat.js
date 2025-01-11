@@ -1,4 +1,4 @@
-const { createDefaultResponse, createFunctionCallingResponse } = require('./utils/responseGenerators');
+import { createDefaultResponse, createFunctionCallingResponse } from './utils/responseGenerators.js';
 
 function getChatResponce(requestBody) {
   const created = Math.floor(Date.now() / 1000);
@@ -10,6 +10,7 @@ function getChatResponce(requestBody) {
   return createFunctionCallingResponse(requestBody, created);
 }
 
-module.exports = {
+
+export {
   getChatResponce,
 };

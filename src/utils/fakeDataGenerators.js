@@ -1,4 +1,4 @@
-const { faker } = require("@faker-js/faker");
+import { faker } from '@faker-js/faker';
 
 function generateToolCallArguments(requestBody) {
   const { parameters } = requestBody.tools[0].function;
@@ -97,7 +97,7 @@ function generateFakeStringData(name) {
   }
 }
 
-module.exports = {
+export {
   generateToolCallArguments,
   generateFunctionCallArguments,
   generateFakeData,

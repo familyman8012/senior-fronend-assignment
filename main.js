@@ -1,9 +1,7 @@
-const nock = require('nock');
-
-
-const { getChatResponce } = require('./src/chat.js');
-const { createChatStream } = require('./src/chat.stream.js');
-const { getImageResponce } = require('./src/image.js');
+import nock from 'nock';
+import { getChatResponce } from './src/chat.js';
+import { createChatStream } from './src/chat.stream.js';
+import { getImageResponce } from './src/image.js';
 
 const OPEN_AI_BASE_URL = 'https://api.openai.com';
 const CHAT_COMPLETIONS_ENDPOINT = '/v1/chat/completions';
@@ -41,7 +39,4 @@ function stopMocking() {
     nock.cleanAll();
 }
 
-module.exports = {
-    mockOpenAIResponse,
-    stopMocking,
-};
+export { mockOpenAIResponse, stopMocking };

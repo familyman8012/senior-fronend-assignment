@@ -1,5 +1,5 @@
-const { faker } = require("@faker-js/faker");
-const { generateFunctionCallArguments, generateToolCallArguments } = require('./fakeDataGenerators');
+import { faker } from '@faker-js/faker';
+import  { generateFunctionCallArguments, generateToolCallArguments } from './fakeDataGenerators.js'
 
 function createDefaultResponse(created) {
   return {
@@ -102,7 +102,8 @@ function getSteamChatObject() {
   return JSON.stringify(ob);
 }
 
-module.exports = {
+
+export {
   createDefaultResponse,
   createFunctionCallingResponse,
   createToolCallObject,

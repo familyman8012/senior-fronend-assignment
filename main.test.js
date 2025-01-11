@@ -1,5 +1,6 @@
-const { mockOpenAIResponse, stopMocking } = require('./main');
-const OpenAI = require('openai');
+import { mockOpenAIResponse, stopMocking } from  './main.js'
+import OpenAI from 'openai'; 
+
 const openai = new OpenAI({ apiKey: "OPENAI_API_KEY" });
 
 describe('Mock OpenAI Chat & Image generation API', () => {

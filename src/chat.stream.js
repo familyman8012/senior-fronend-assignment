@@ -1,5 +1,5 @@
-const { Readable } = require('stream');
-const { getSteamChatObject } = require('./utils/responseGenerators');
+import { Readable } from 'node:stream';
+import { getSteamChatObject } from './utils/responseGenerators.js'
 
 function createChatStream() {
     const stream = new Readable({
@@ -27,6 +27,7 @@ function createChatStream() {
     return stream;
 }
 
-module.exports = {
+
+export {
     createChatStream,
 };

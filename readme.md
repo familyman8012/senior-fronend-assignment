@@ -20,10 +20,9 @@ You can install this module using npm as a dev dependency :
 npm install -D openai-api-mock
 ```
 
-
 ## Usage
 ```js
-const { mockOpenAIResponse } = require('openai-api-mock');
+import { mockOpenAIResponse } from 'openai-api-mock';
 ```
 
 Then, call the mockOpenAIResponse function to set up the mock response:
@@ -31,17 +30,18 @@ Then, call the mockOpenAIResponse function to set up the mock response:
 ```js
 mockOpenAIResponse();
 ```
-This function intercepts HTTP calls to the OpenAI endpoint and returns a mock response. The mock response is generated based on the requestBody of the code , and it supports complex (function call) requestBody structures like arrays and nested objects.
+This function intercepts HTTP calls to the OpenAI endpoint and returns a mock response. The mock response is generated based on the requestBody of the code, and it supports complex (function call) requestBody structures like arrays and nested objects.
 
 ```js
-mockOpenAIResponse(force = true);
+mockOpenAIResponse(true);
 ```
+
 The force parameter is a boolean that determines whether the mock response should be used regardless of the environment. 
 If force is true, the mock response will be used regardless of the environment. 
 
 If force is `false` or not provided, the mock response will only be used if the `NODE_ENV` environment variable is set to `development`.
 
-### Example responces
+### Example responses
 
 ```js
 // Call the mockOpenAIResponse function once to set up the mock
@@ -51,7 +51,7 @@ mockOpenAIResponse()
 const response = await openai.chat.completions.create({
                 model: "gpt-3.5",
                 messages: [
-                    { role: 'system', content: "You'r an expert chef" },
+                    { role: 'system', content: "You're an expert chef" },
                     { role: 'user', content: "Suggest at least 5 recipes" },
                 ]
 });
@@ -85,7 +85,7 @@ const response = await openai.chat.completions.create({
                 model: "gpt-3.5",
                 stream : true,
                 messages: [
-                    { role: 'system', content: "You'r an expert chef" },
+                    { role: 'system', content: "You're an expert chef" },
                     { role: 'user', content: "Suggest at least 5 recipes" },
                 ]
 });
