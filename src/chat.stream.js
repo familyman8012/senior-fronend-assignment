@@ -1,5 +1,5 @@
-const { faker } = require("@faker-js/faker");
 const { Readable } = require('stream');
+const { getSteamChatObject } = require('./utils/responseGenerators');
 
 function createChatStream() {
     const stream = new Readable({
@@ -27,34 +27,6 @@ function createChatStream() {
     return stream;
 }
 
-function getSteamChatObject() {
-    const created = Math.floor(Date.now() / 1000);
-
-    let lorem = faker.lorem.paragraph()
-    const loremArray = lorem.split(" ");
-
-    let ob = {
-        id: `chatcmpl-${faker.string.alphanumeric(30)}`,
-        object: 'chat.completion.chunk',
-        created: created,
-        model: "gpt-3.5-mock",
-        system_fingerprint: null,
-        choices: [
-            {
-                index: 0,
-                delta: {
-                    content: loremArray[0]
-                },
-                logprobs: null,
-                finish_reason: null
-            }
-        ]
-    }
-
-    return JSON.stringify(ob);
-}
-
 module.exports = {
     createChatStream,
-    getSteamChatObject,
 };
