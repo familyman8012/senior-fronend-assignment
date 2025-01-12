@@ -14,7 +14,13 @@
     "development",
     "testing",
     "chatgpt",
-    "interceptor"
+    "interceptor",
+    "sandbox",
+    "fake",
+    "mocking",
+    "ai",
+    "artificial intelligence",
+    "machine learning"
   ],
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
