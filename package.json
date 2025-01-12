@@ -17,7 +17,7 @@
     "interceptor"
   ],
   "scripts": {
-    "test":"node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "author": "Chiheb Nabil",
   "license": "MIT",
@@ -29,5 +29,8 @@
   "devDependencies": {
     "jest": "^29.7.0",
     "openai": "^4.52.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
