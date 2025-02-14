@@ -1,3 +1,4 @@
+import fetch from 'node-fetch';
 import { mockOpenAIResponse, stopMocking } from  './main.js'
 import OpenAI from 'openai'; 
 
