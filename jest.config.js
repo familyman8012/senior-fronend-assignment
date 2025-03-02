@@ -1,6 +1,6 @@
 export default {
   collectCoverageFrom: [
-    'main.js',
+    '/src/index.js',
     '!**/node_modules/**',
   ],
   coverageReporters: ['text', 'lcov'],

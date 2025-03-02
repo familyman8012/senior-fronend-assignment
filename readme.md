@@ -30,18 +30,42 @@ import { mockOpenAIResponse } from 'openai-api-mock';
 Then, call the mockOpenAIResponse function to set up the mock response:
 
 ```js
+// Basic usage
 mockOpenAIResponse();
-```
-This function intercepts HTTP calls to the OpenAI endpoint and returns a mock response. The mock response is generated based on the requestBody of the code, and it supports complex (function call) requestBody structures like arrays and nested objects.
 
-```js
+// Force mocking regardless of environment
 mockOpenAIResponse(true);
+
+// With configuration options
+mockOpenAIResponse(false, {
+    includeErrors: true,    // Simulate random API errors
+    latency: 1000,         // Add 1 second delay to responses
+    logRequests: true      // Log incoming requests to console
+});
 ```
 
-The force parameter is a boolean that determines whether the mock response should be used regardless of the environment. 
-If force is true, the mock response will be used regardless of the environment. 
+The function accepts two parameters:
+- `force` (boolean): Determines whether the mock response should be used regardless of the environment. If false or not provided, mocking only occurs in development environment.
+- `options` (object): Additional configuration options
+  - `includeErrors` (boolean): When true, randomly simulates API errors
+  - `latency` (number): Adds artificial delay to responses in milliseconds
+  - `logRequests` (boolean): Logs incoming requests to console for debugging
 
-If force is `false` or not provided, the mock response will only be used if the `NODE_ENV` environment variable is set to `development`.
+The function returns an object with control methods:
+```js
+const mock = mockOpenAIResponse();
+
+// Check if mocking is active
+console.log(mock.isActive);
+
+// Stop all mocks
+mock.stopMocking();
+
+// Add custom endpoint mock
+mock.addCustomEndpoint('POST', '/v1/custom', (uri, body) => {
+    return [200, { custom: 'response' }];
+});
+```
 
 ### Example responses
 

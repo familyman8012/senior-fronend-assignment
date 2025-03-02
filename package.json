@@ -28,7 +28,7 @@
   },
   "author": "Chiheb Nabil",
   "license": "MIT",
-  "main": "main.js",
+  "main": "./src/index.js",
   "dependencies": {
     "@faker-js/faker": "^9.0.0",
     "nock": "^13.5.4"
