@@ -61,7 +61,7 @@ console.log(mock.isActive);
 // Stop all mocks
 mock.stopMocking();
 
-// Add custom endpoint mock
+// Add custom endpoint mock (uses api.openai.com as base url)
 mock.addCustomEndpoint('POST', '/v1/custom', (uri, body) => {
     return [200, { custom: 'response' }];
 });
