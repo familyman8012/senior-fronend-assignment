@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { mockOpenAIResponse, stopMocking } from  './index.js'
+import { mockOpenAIResponse, stopMocking } from  '../src/index.js';
 import OpenAI from 'openai'; 
 
 const openai = new OpenAI({ apiKey: "OPENAI_API_KEY" });
