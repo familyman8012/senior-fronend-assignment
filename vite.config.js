@@ -10,7 +10,7 @@ export default defineConfig({
       entry: './src/index.js',
       name: 'openai-api-mock',
       formats: ['es', 'cjs'],
-      fileName: (format) => `index.${format}.js`
+      fileName: (format) => `index.${format === 'es' ? 'js' : 'cjs'}`
     },
     rollupOptions: {
       external: [
@@ -21,6 +21,7 @@ export default defineConfig({
         'openai'
       ],
       output: {
+        exports: "auto",
         // Provide global variables to use in UMD build
         globals: {
           nock: 'nock',

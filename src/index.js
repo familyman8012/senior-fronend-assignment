@@ -16,7 +16,7 @@ const customScopes = []; // Track custom scopes
  * @param {boolean} options.logRequests - Whether to log incoming requests
  * @returns {Object} An object with control methods for the mocks
  */
-function mockOpenAIResponse(force = false, options = {}) {
+export function mockOpenAIResponse(force = false, options = {}) {
     const {
         includeErrors = false,
         latency = 0,
@@ -30,13 +30,10 @@ function mockOpenAIResponse(force = false, options = {}) {
         return { isActive: false, stopMocking };
     }
 
-    // Add delay if latency is specified
-    const delayResponse = latency > 0 ?
-        nock.defaults({ delayConnection: latency }) : null;
-
     // Mock chat completions endpoint
     const chatScope = nock(OPEN_AI_BASE_URL)
         .post(CHAT_COMPLETIONS_ENDPOINT)
+        .delay(latency) // Add delay to the interceptor
         .reply(function (uri, requestBody) {
             if (logRequests) {
                 console.log(`[openai-api-mock] Chat request:`, JSON.stringify(requestBody, null, 2));
@@ -70,6 +67,7 @@ function mockOpenAIResponse(force = false, options = {}) {
     // Mock image generations endpoint
     const imageScope = nock(OPEN_AI_BASE_URL)
         .post(IMAGE_GENERATIONS_ENDPOINT)
+        .delay(latency) // Add delay to the interceptor
         .reply(function (uri, requestBody) {
             if (logRequests) {
                 console.log(`[openai-api-mock] Image request:`, JSON.stringify(requestBody, null, 2));
@@ -119,9 +117,7 @@ function mockOpenAIResponse(force = false, options = {}) {
     };
 }
 
-function stopMocking() {
+export function stopMocking() {
     nock.cleanAll();
     customScopes.forEach(scope => scope.persist(false)); // Disable persistence
 }
-
-export { mockOpenAIResponse, stopMocking };
