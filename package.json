@@ -1,6 +1,6 @@
 {
   "name": "openai-api-mock",
-  "version": "0.1.25",
+  "version": "0.1.26",
   "description": "A Node.js module for mocking OpenAI API responses in a development environment",
   "repository": {
     "type": "git",
@@ -21,14 +21,22 @@
     "ai",
     "artificial intelligence",
     "machine learning"
-  ],
+  ],  
   "scripts": {
+    "build": "vite build",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
   },
   "author": "Chiheb Nabil",
   "license": "MIT",
-  "main": "./src/index.js",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js"
+    }
+  },
   "dependencies": {
     "@faker-js/faker": "^9.0.0",
     "nock": "^13.5.4"
@@ -36,7 +44,8 @@
   "devDependencies": {
     "jest": "^29.7.0",
     "node-fetch": "^3.3.2",
-    "openai": "^4.52.4"
+    "openai": "^4.52.4",
+    "vite": "^6.2.0"
   },
   "engines": {
     "node": ">=16.0.0"

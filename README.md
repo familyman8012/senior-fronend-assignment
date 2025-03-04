@@ -23,8 +23,15 @@ npm install -D openai-api-mock
 ```
 
 ## Usage
+
+The module supports both ESM and CommonJS imports:
+
 ```js
+// ESM
 import { mockOpenAIResponse } from 'openai-api-mock';
+
+// CommonJS
+const { mockOpenAIResponse } = require('openai-api-mock');
 ```
 
 Then, call the mockOpenAIResponse function to set up the mock response:
