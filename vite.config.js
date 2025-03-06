@@ -30,7 +30,7 @@ export default defineConfig({
         }
       }
     },
-    target: 'node16',
+    target: 'node18',
     sourcemap: true,
     minify: false
   }
