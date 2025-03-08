@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { mockOpenAIResponse, stopMocking } from '../src/index.js';
+import { mockOpenAIResponse, stopMocking } from '../dist/index.js';
 
 describe('Mock Custom OpenAI endpoint', () => {
     let mock;

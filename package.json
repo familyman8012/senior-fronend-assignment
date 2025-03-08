@@ -21,13 +21,13 @@
     "ai",
     "artificial intelligence",
     "machine learning"
-  ],  
+  ],
   "scripts": {
     "build": "vite build",
+    "pretest": "npm run build",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-	"prepublishOnly": "npm run build"
-
+    "prepublishOnly": "npm run build"
   },
   "author": "Chiheb Nabil",
   "license": "MIT",
@@ -39,7 +39,9 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "@faker-js/faker": "^9.0.0",
     "nock": "^14.0.0"
