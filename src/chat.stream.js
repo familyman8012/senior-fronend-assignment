@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream';
 import { getSteamChatObject } from './utils/responseGenerators.js'
 
-function createChatStream() {
+export function createChatStream() {
     const stream = new Readable({
         read() { }
     });
@@ -26,8 +26,3 @@ function createChatStream() {
 
     return stream;
 }
-
-
-export {
-    createChatStream,
-};

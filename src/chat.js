@@ -1,6 +1,6 @@
 import { createDefaultResponse, createFunctionCallingResponse } from './utils/responseGenerators.js';
 
-function getChatResponce(requestBody) {
+export function getChatResponce(requestBody) {
   const created = Math.floor(Date.now() / 1000);
 
   if (!requestBody.functions && !requestBody.tools) {
@@ -9,8 +9,3 @@ function getChatResponce(requestBody) {
 
   return createFunctionCallingResponse(requestBody, created);
 }
-
-
-export {
-  getChatResponce,
-};

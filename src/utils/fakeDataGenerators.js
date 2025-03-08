@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 
-function generateToolCallArguments(requestBody) {
+export function generateToolCallArguments(requestBody) {
   const { parameters } = requestBody.tools[0].function;
   const argumentsObject = {};
 
@@ -15,7 +15,7 @@ function generateToolCallArguments(requestBody) {
   return JSON.stringify(argumentsObject, null, 2);
 }
 
-function generateFunctionCallArguments(requestBody) {
+export function generateFunctionCallArguments(requestBody) {
   const { parameters } = requestBody.functions[0];
   const argumentsObject = {};
 
@@ -30,7 +30,7 @@ function generateFunctionCallArguments(requestBody) {
   return JSON.stringify(argumentsObject, null, 2);
 }
 
-function generateFakeData(type, properties, name) {
+export function generateFakeData(type, properties, name) {
   switch (type) {
     case "string":
       return generateFakeStringData(name);
@@ -47,7 +47,7 @@ function generateFakeData(type, properties, name) {
   }
 }
 
-function generateFakeArray(properties) {
+export function generateFakeArray(properties) {
   const arrayItemsType = properties.items.type;
   return Array.from({ length: 5 }, () => {
     if (arrayItemsType === "string") {
@@ -59,7 +59,7 @@ function generateFakeArray(properties) {
   });
 }
 
-function generateFakeObject(properties) {
+export function generateFakeObject(properties) {
   const itemObject = {};
   Object.entries(properties.properties).forEach(([itemName, itemDetails]) => {
     itemObject[itemName] = generateFakeData(itemDetails.type, itemDetails, itemName);
@@ -67,7 +67,7 @@ function generateFakeObject(properties) {
   return itemObject;
 }
 
-function generateFakeStringData(name) {
+export function generateFakeStringData(name) {
   if (name === "name") {
     return faker.person.fullName();
   } else if (name === "email") {
@@ -96,12 +96,3 @@ function generateFakeStringData(name) {
     return faker.lorem.words(5);
   }
 }
-
-export {
-  generateToolCallArguments,
-  generateFunctionCallArguments,
-  generateFakeData,
-  generateFakeArray,
-  generateFakeObject,
-  generateFakeStringData,
-};

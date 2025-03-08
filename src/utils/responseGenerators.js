@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import  { generateFunctionCallArguments, generateToolCallArguments } from './fakeDataGenerators.js'
 
-function createDefaultResponse(created) {
+export function createDefaultResponse(created) {
   return {
     choices: [
       {
@@ -26,7 +26,7 @@ function createDefaultResponse(created) {
   };
 }
 
-function createFunctionCallingResponse(requestBody, created) {
+export function createFunctionCallingResponse(requestBody, created) {
   const isTool = Boolean(requestBody.tools);
   const functionOrToolCallObject = isTool
     ? [createToolCallObject(requestBody)]
@@ -57,7 +57,7 @@ function createFunctionCallingResponse(requestBody, created) {
   };
 }
 
-function createToolCallObject(requestBody) {
+export function createToolCallObject(requestBody) {
   return {
     id: `call-${faker.string.alphanumeric(30)}`,
     type: "function",
@@ -68,14 +68,14 @@ function createToolCallObject(requestBody) {
   };
 }
 
-function createFunctionCallObject(requestBody) {
+export function createFunctionCallObject(requestBody) {
   return {
     name: `${requestBody.functions[0].name}`,
     arguments: `${generateFunctionCallArguments(requestBody)}`,
   };
 }
 
-function getSteamChatObject() {
+export function getSteamChatObject() {
   const created = Math.floor(Date.now() / 1000);
 
   let lorem = faker.lorem.paragraph()
@@ -101,12 +101,3 @@ function getSteamChatObject() {
 
   return JSON.stringify(ob);
 }
-
-
-export {
-  createDefaultResponse,
-  createFunctionCallingResponse,
-  createToolCallObject,
-  createFunctionCallObject,
-  getSteamChatObject,
-};

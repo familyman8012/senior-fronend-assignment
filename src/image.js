@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 
-function getImageResponce(requestBody) {
+export function getImageResponce(requestBody) {
 
   const n = requestBody.n || 1;
   const data = [];
@@ -16,9 +16,3 @@ function getImageResponce(requestBody) {
     data: data
   };
 }
-
-
-
-export {
-  getImageResponce,
-};
