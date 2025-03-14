@@ -1,6 +1,6 @@
 # OpenAI API Mock
 
-This is a Node.js module for mocking OpenAI API responses in a development environment.
+This is a Node.js module for mocking OpenAI API responses in a development environment .
 
 [![Tests](https://github.com/chihebnabil/openai-api-mock/actions/workflows/test.yml/badge.svg)](https://github.com/chihebnabil/openai-api-mock/actions/workflows/test.yml)
 
