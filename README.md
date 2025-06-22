@@ -137,6 +137,32 @@ This module uses the `nock` library to intercept HTTP calls to the following Ope
 - `https://api.openai.com/v1/images/generations`: This endpoint is used for generating images.
 
 
+## TypeScript Support
+
+This package includes TypeScript definitions out of the box. After installing the package, you can use it with full type support:
+
+```typescript
+import { mockOpenAIResponse, MockOptions } from 'openai-api-mock';
+
+// Configure with TypeScript types
+const options: MockOptions = {
+    includeErrors: true,    // Optional: simulate random API errors
+    latency: 1000,         // Optional: add 1 second delay
+    logRequests: true      // Optional: log requests to console
+};
+
+const mock = mockOpenAIResponse(true, options);
+
+// TypeScript provides full type checking and autocompletion
+console.log(mock.isActive);  // boolean
+mock.stopMocking();         // function
+
+// Custom endpoints with type safety
+mock.addCustomEndpoint('POST', '/v1/custom', (uri, body) => {
+    return [200, { custom: 'response' }];
+});
+```
+
 ## Dependencies
 This module depends on the following npm packages:
 
