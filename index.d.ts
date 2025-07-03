@@ -12,6 +12,14 @@ export interface MockOptions {
    * Logs incoming requests to console for debugging
    */
   logRequests?: boolean;
+  /**
+   * Seed value for consistent/deterministic responses
+   */
+  seed?: number | string;
+  /**
+   * Whether to use predefined fixed response templates
+   */
+  useFixedResponses?: boolean;
 }
 
 export interface MockControl {
@@ -23,6 +31,22 @@ export interface MockControl {
    * Stops all active mocks
    */
   stopMocking: () => void;
+  /**
+   * Resets the faker seed to ensure consistent outputs for subsequent requests
+   */
+  setSeed: (seed: number | string) => void;
+  /**
+   * Resets faker to use random values (removes deterministic behavior)
+   */
+  resetSeed: () => void;
+  /**
+   * Get available response templates
+   */
+  getResponseTemplates: () => Record<string, any>;
+  /**
+   * Create a custom response template
+   */
+  createResponseTemplate: (templateType: string, overrides?: Record<string, any>) => Record<string, any>;
   /**
    * Adds a custom endpoint mock
    * @param method - HTTP method (GET, POST, etc.)

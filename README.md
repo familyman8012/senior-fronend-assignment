@@ -14,6 +14,16 @@ The module supports the following OpenAI API endpoints:
 
 > This module is powering the sandbox mode for [Aipify](https://aipify.co).
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [Consistent Outputs for Testing](#consistent-outputs-for-testing)
+- [Intercepted URLs](#intercepted-urls)
+- [TypeScript Support](#typescript-support)
+- [Dependencies](#dependencies)
+- [License](#license)
+
 ## Installation
 
 You can install this module using npm as a dev dependency :
@@ -47,7 +57,9 @@ mockOpenAIResponse(true);
 mockOpenAIResponse(false, {
     includeErrors: true,    // Simulate random API errors
     latency: 1000,         // Add 1 second delay to responses
-    logRequests: true      // Log incoming requests to console
+    logRequests: true,     // Log incoming requests to console
+    seed: 12345,           // Seed for consistent/deterministic responses
+    useFixedResponses: true // Use predefined fixed response templates
 });
 ```
 
@@ -57,6 +69,8 @@ The function accepts two parameters:
   - `includeErrors` (boolean): When true, randomly simulates API errors
   - `latency` (number): Adds artificial delay to responses in milliseconds
   - `logRequests` (boolean): Logs incoming requests to console for debugging
+  - `seed` (number|string): Seed value for consistent/deterministic responses using faker.js
+  - `useFixedResponses` (boolean): Use predefined fixed response templates for completely consistent responses
 
 The function returns an object with control methods:
 ```js
@@ -67,6 +81,16 @@ console.log(mock.isActive);
 
 // Stop all mocks
 mock.stopMocking();
+
+// Seed management for consistent outputs
+mock.setSeed(12345);        // Set a new seed for deterministic responses
+mock.resetSeed();           // Reset to random responses
+
+// Template management
+const templates = mock.getResponseTemplates(); // Get available templates
+const customTemplate = mock.createResponseTemplate('SIMPLE_CHAT', {
+    choices: [{ message: { content: 'Custom response' } }]
+});
 
 // Add custom endpoint mock (uses api.openai.com as base url)
 mock.addCustomEndpoint('POST', '/v1/custom', (uri, body) => {
@@ -129,6 +153,74 @@ for await (const part of response) {
 }
 ```
 
+## Consistent Outputs for Testing
+
+The library provides several mechanisms to achieve consistent, deterministic outputs for reliable testing:
+
+### Seed-based Consistency
+
+Use seeds to ensure reproducible responses across test runs:
+
+```js
+// Set up mock with a fixed seed
+const mock = mockOpenAIResponse(true, { seed: 12345 });
+
+// Multiple calls will return identical responses
+const response1 = await openai.chat.completions.create({
+  model: 'gpt-3.5-turbo',
+  messages: [{ role: 'user', content: 'Hello' }]
+});
+
+const response2 = await openai.chat.completions.create({
+  model: 'gpt-3.5-turbo',
+  messages: [{ role: 'user', content: 'Hello' }]
+});
+
+// response1 and response2 will be identical
+console.log(JSON.stringify(response1) === JSON.stringify(response2)); // true
+```
+
+### Fixed Response Templates
+
+For maximum consistency, use predefined response templates:
+
+```js
+// Enable fixed responses
+const mock = mockOpenAIResponse(true, { useFixedResponses: true });
+
+const response = await openai.chat.completions.create({
+  model: 'gpt-3.5-turbo',
+  messages: [{ role: 'user', content: 'Any message' }]
+});
+
+// Will always return the same fixed response
+console.log(response.choices[0].message.content); 
+// "This is a consistent test response."
+```
+
+### Runtime Seed Management
+
+Change seeds during runtime for different test scenarios:
+
+```js
+const mock = mockOpenAIResponse(true);
+
+// Test scenario A
+mock.setSeed(12345);
+const responseA = await openai.chat.completions.create({...});
+
+// Test scenario B  
+mock.setSeed(54321);
+const responseB = await openai.chat.completions.create({...});
+
+// Reset to random behavior
+mock.resetSeed();
+const responseRandom = await openai.chat.completions.create({...});
+```
+
+For comprehensive examples and best practices, see [CONSISTENCY_EXAMPLES.md](./CONSISTENCY_EXAMPLES.md).
+```
+
 ## Intercepted URLs
 
 This module uses the `nock` library to intercept HTTP calls to the following OpenAI API endpoints:
@@ -146,9 +238,11 @@ import { mockOpenAIResponse, MockOptions } from 'openai-api-mock';
 
 // Configure with TypeScript types
 const options: MockOptions = {
-    includeErrors: true,    // Optional: simulate random API errors
-    latency: 1000,         // Optional: add 1 second delay
-    logRequests: true      // Optional: log requests to console
+    includeErrors: true,       // Optional: simulate random API errors
+    latency: 1000,            // Optional: add 1 second delay
+    logRequests: true,        // Optional: log requests to console
+    seed: 12345,              // Optional: seed for consistent responses
+    useFixedResponses: true   // Optional: use fixed response templates
 };
 
 const mock = mockOpenAIResponse(true, options);
@@ -156,6 +250,14 @@ const mock = mockOpenAIResponse(true, options);
 // TypeScript provides full type checking and autocompletion
 console.log(mock.isActive);  // boolean
 mock.stopMocking();         // function
+mock.setSeed(54321);        // function with type checking
+mock.resetSeed();           // function
+
+// Template methods with type safety
+const templates = mock.getResponseTemplates();  // Record<string, any>
+const customTemplate = mock.createResponseTemplate('SIMPLE_CHAT', {
+    choices: [{ message: { content: 'Custom content' } }]
+});
 
 // Custom endpoints with type safety
 mock.addCustomEndpoint('POST', '/v1/custom', (uri, body) => {
