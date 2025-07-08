@@ -1,14 +1,18 @@
 import { faker } from '@faker-js/faker';
-import  { generateFunctionCallArguments, generateToolCallArguments } from './fakeDataGenerators.js'
+import { generateFunctionCallArguments, generateToolCallArguments } from './fakeDataGenerators.js';
+import { detectContentType, getContentSample } from './contentSamples.js';
 
-export function createDefaultResponse(created) {
+export function createDefaultResponse(created, messages = []) {
+  const contentType = detectContentType(messages);
+  const content = getContentSample(contentType);
+  
   return {
     choices: [
       {
         finish_reason: "stop",
         index: 0,
         message: {
-          content: faker.lorem.words(5),
+          content,
           role: "assistant",
         },
         logprobs: null,
@@ -19,9 +23,9 @@ export function createDefaultResponse(created) {
     model: `gpt-3.5-mock`,
     object: "chat.completion",
     usage: {
-      completion_tokens: 17,
+      completion_tokens: Math.floor(content.length / 4),
       prompt_tokens: 57,
-      total_tokens: 74,
+      total_tokens: Math.floor(content.length / 4) + 57,
     },
   };
 }
@@ -75,11 +79,26 @@ export function createFunctionCallObject(requestBody) {
   };
 }
 
-export function getSteamChatObject() {
+// 스트림 상태 관리를 위한 전역 변수
+let currentStreamContent = '';
+let currentStreamIndex = 0;
+
+export function getSteamChatObject(messages = [], isReset = false) {
   const created = Math.floor(Date.now() / 1000);
 
-  let lorem = faker.lorem.paragraph()
-  const loremArray = lorem.split(" ");
+  // 새 스트림 시작 또는 리셋
+  if (isReset || !currentStreamContent) {
+    const contentType = detectContentType(messages);
+    currentStreamContent = getContentSample(contentType);
+    currentStreamIndex = 0;
+  }
+
+  // 현재 글자 반환
+  const currentChar = currentStreamContent[currentStreamIndex] || '';
+  currentStreamIndex++;
+
+  // 스트림 완료 여부 확인
+  const isFinished = currentStreamIndex >= currentStreamContent.length;
 
   let ob = {
     id: `chatcmpl-${faker.string.alphanumeric(30)}`,
@@ -91,10 +110,10 @@ export function getSteamChatObject() {
       {
         index: 0,
         delta: {
-          content: loremArray[0]
+          content: currentChar
         },
         logprobs: null,
-        finish_reason: null
+        finish_reason: isFinished ? "stop" : null
       }
     ]
   }
