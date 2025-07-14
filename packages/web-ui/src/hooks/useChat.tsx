@@ -156,8 +156,11 @@ export function useChat() {
         handleMessageCleanup(streamingId);
         setStreamingId(null);
       }
+      
+      // Clear any error that might be related to cancellation
+      setError(null);
     }
-  }, [handleMessageCleanup, setStreamingId, setAbortController, getAbortController]);
+  }, [handleMessageCleanup, setStreamingId, setAbortController, getAbortController, setError]);
 
   const regenerateMessage = useCallback(async (messageId: string) => {
     console.log('regenerateMessage called for:', messageId);

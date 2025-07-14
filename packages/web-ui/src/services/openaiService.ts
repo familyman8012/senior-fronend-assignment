@@ -32,7 +32,7 @@ export class OpenAIService {
     onError,
     onComplete,
   }: ChatStreamOptions): Promise<void> {
-    let isCompleted = false;
+ 
     
     try {
       const stream = await openai.chat.completions.create({
@@ -56,21 +56,15 @@ export class OpenAIService {
 
         // Check if stream is finished
         if (chunk.choices[0]?.finish_reason === 'stop') {
-          isCompleted = true;
+         
           onComplete?.();
           break;
         }
       }
-      
-      // Handle abort case
-      if (signal?.aborted && !isCompleted) {
-        throw new Error('Stream aborted');
-      }
+
     } catch (error) {
       if (error instanceof Error) {
-        if (error.name === 'AbortError' || error.message === 'Stream aborted') {
-          onError?.(new Error('스트리밍이 취소되었습니다.'));
-        } else if (error.message.includes('429')) {
+        if (error.message.includes('429')) {
           onError?.(new Error('요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.'));
         } else if (error.message.includes('401')) {
           onError?.(new Error('인증에 실패했습니다. API 키를 확인해주세요.'));
