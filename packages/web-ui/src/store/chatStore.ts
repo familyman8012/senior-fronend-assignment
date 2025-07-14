@@ -13,11 +13,13 @@ interface ChatActions {
   appendToStreamingMessage: (id: string, content: string) => void;
   truncateMessagesFrom: (id: string) => void;
   editMessage: (id: string, newContent: string) => void;
-  editMessage: (id: string, newContent: string) => void;
-  editMessage: (id: string, newContent: string) => void;
+  setAbortController: (controller: AbortController | null) => void;
+  getAbortController: () => AbortController | null;
 }
 
-type ChatStore = ChatState & ChatActions;
+type ChatStore = ChatState & ChatActions & {
+  abortController: AbortController | null;
+};
 
 const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -38,6 +40,7 @@ export const useChatStore = create<ChatStore>()(
         isLoading: false,
         error: null,
         currentStreamingId: null,
+        abortController: null,
 
         // Actions
         addMessage: (message) => {
@@ -114,6 +117,14 @@ export const useChatStore = create<ChatStore>()(
 
             return { messages: updatedMessages };
           });
+        },
+
+        setAbortController: (controller) => {
+          set({ abortController: controller });
+        },
+
+        getAbortController: () => {
+          return get().abortController;
         },
       }),
       {

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useChatStore, detectContentType } from '@/store/chatStore';
 import { ContentType } from '@/types/chat';
 import { OpenAIService } from '@/services/openaiService';
@@ -14,7 +14,6 @@ interface QueuedMessage {
 const messageQueue = new OfflineQueue<QueuedMessage>('chatMessageQueue');
 
 export function useChat() {
-  const abortControllerRef = useRef<AbortController | null>(null);
   const { isOnline } = useNetworkStatus();
   const {
     addMessage,
@@ -24,22 +23,96 @@ export function useChat() {
     setError,
     setStreamingId,
     messages,
+    setAbortController,
+    getAbortController,
   } = useChatStore();
 
+  // 공통 스트리밍 처리 함수
+  const handleStreaming = useCallback(async (
+    apiMessages: ChatCompletionMessageParam[],
+    assistantMessageId: string,
+    onError?: (error: Error) => void
+  ) => {
+    setStreamingId(assistantMessageId);
+    setLoading(true);
+
+          try {
+        const controller = new AbortController();
+        setAbortController(controller);
+        console.log('New AbortController created');
+
+        await OpenAIService.createChatStream({
+          messages: apiMessages,
+          signal: controller.signal,
+          onChunk: (chunk) => {
+            appendToStreamingMessage(assistantMessageId, chunk);
+          },
+        onComplete: () => {
+          updateMessage(assistantMessageId, { isStreaming: false });
+          setStreamingId(null);
+        },
+        onError: (error) => {
+          handleStreamError(error, assistantMessageId);
+          onError?.(error);
+        },
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      setError(errorMessage);
+      handleMessageCleanup(assistantMessageId);
+      if (error instanceof Error && onError) {
+        onError(error);
+      }
+    } finally {
+      setLoading(false);
+      setStreamingId(null);
+      setAbortController(null);
+    }
+  }, [appendToStreamingMessage, updateMessage, setLoading, setStreamingId, setError, setAbortController, getAbortController]);
+
+  // 스트리밍 에러 처리 공통 함수
+  const handleStreamError = useCallback((error: Error, messageId: string) => {
+    setError(error.message);
+    handleMessageCleanup(messageId);
+    setStreamingId(null);
+  }, [setError, setStreamingId]);
+
+  // 빈 메시지 정리 공통 함수
+  const handleMessageCleanup = useCallback((messageId: string) => {
+    const message = useChatStore.getState().messages.find(m => m.id === messageId);
+    if (message && !message.content) {
+      useChatStore.getState().deleteMessage(messageId);
+    } else if (message) {
+      updateMessage(messageId, { isStreaming: false });
+    }
+  }, [updateMessage]);
+
+  // Assistant 메시지 생성 공통 함수
+  const createAssistantMessage = useCallback((contentType: ContentType) => {
+    const assistantMessage = {
+      role: 'assistant' as const,
+      content: '',
+      isStreaming: true,
+      contentType,
+    };
+    
+    addMessage(assistantMessage);
+    
+    const addedMessages = useChatStore.getState().messages;
+    const actualAssistantMessage = addedMessages[addedMessages.length - 1];
+    return actualAssistantMessage?.id;
+  }, [addMessage]);
+
   const sendMessage = useCallback(async (content: string) => {
-    // Clear any previous errors
     setError(null);
     
-    // Add user message
     const userMessage = {
       role: 'user' as const,
       content,
     };
     addMessage(userMessage);
 
-    // Check if offline
     if (!isOnline) {
-      // Add to offline queue
       messageQueue.add({
         content,
         timestamp: Date.now(),
@@ -49,122 +122,53 @@ export function useChat() {
       return;
     }
 
-    // Create assistant message placeholder with unique ID
-    const assistantMessageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const assistantMessage = {
-      role: 'assistant' as const,
-      content: '',
-      isStreaming: true,
-      contentType: detectContentType(content) as ContentType,
-    };
+    const contentType = detectContentType(content) as ContentType;
+    const assistantMessageId = createAssistantMessage(contentType);
     
-    // Get current messages state for API call
-    const currentMessages = useChatStore.getState().messages;
-    
-    // Add the assistant message and get its ID from the store
-    addMessage(assistantMessage);
-    
-    // Get the actual ID of the just-added message
-    const addedMessages = useChatStore.getState().messages;
-    const actualAssistantMessage = addedMessages[addedMessages.length - 1];
-    const actualAssistantId = actualAssistantMessage?.id;
-    
-    if (!actualAssistantId) {
+    if (!assistantMessageId) {
       setError('메시지 생성에 실패했습니다.');
       return;
     }
     
-    setStreamingId(actualAssistantId);
-    setLoading(true);
+    const currentMessages = useChatStore.getState().messages;
+    const apiMessages: ChatCompletionMessageParam[] = [
+      ...currentMessages.slice(0, -1).map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      })),
+      userMessage,
+    ];
 
-    try {
-      abortControllerRef.current = new AbortController();
-      
-      // Prepare messages for API
-      const apiMessages: ChatCompletionMessageParam[] = [
-        ...currentMessages.map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-        userMessage,
-      ];
-
-      await OpenAIService.createChatStream({
-        messages: apiMessages,
-        signal: abortControllerRef.current.signal,
-        onChunk: (chunk) => {
-          appendToStreamingMessage(actualAssistantId, chunk);
-        },
-        onComplete: () => {
-          updateMessage(actualAssistantId, { isStreaming: false });
-          setStreamingId(null);
-        },
-        onError: (error) => {
-          setError(error.message);
-          // Remove empty assistant message on error
-          const message = useChatStore.getState().messages.find(m => m.id === actualAssistantId);
-          if (message && !message.content) {
-            useChatStore.getState().deleteMessage(actualAssistantId);
-          } else {
-            // Mark message as not streaming to show regenerate button
-            updateMessage(actualAssistantId, { isStreaming: false });
-          }
-          setStreamingId(null);
-        },
-      });
-      
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message || '메시지 전송 중 오류가 발생했습니다.');
-      }
-      
-      // Remove the empty assistant message on error
-      const message = useChatStore.getState().messages.find(m => m.id === actualAssistantId);
-      if (message && !message.content) {
-        useChatStore.getState().deleteMessage(actualAssistantId);
-      }
-    } finally {
-      setLoading(false);
-      setStreamingId(null);
-      abortControllerRef.current = null;
-    }
-  }, [addMessage, updateMessage, appendToStreamingMessage, setLoading, setError, setStreamingId]);
+    await handleStreaming(apiMessages, assistantMessageId);
+  }, [addMessage, isOnline, setError, createAssistantMessage, handleStreaming]);
 
   const cancelStream = useCallback(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
+    const controller = getAbortController();
+    console.log('cancelStream called, abortController:', controller);
+    if (controller) {
+      controller.abort();
+      setAbortController(null);
       
-      // Get the current streaming message and mark it as not streaming
       const streamingId = useChatStore.getState().currentStreamingId;
+      console.log('currentStreamingId:', streamingId);
       
       if (streamingId) {
-        const messages = useChatStore.getState().messages;
-        const message = messages.find(m => m.id === streamingId);
-        
-        if (message && !message.content) {
-          // If message is empty, remove it
-          useChatStore.getState().deleteMessage(streamingId);
-        } else {
-          // Otherwise, just mark it as not streaming to show regenerate button
-          updateMessage(streamingId, { isStreaming: false });
-        }
+        handleMessageCleanup(streamingId);
         setStreamingId(null);
       }
     }
-  }, [updateMessage, setStreamingId]);
+  }, [handleMessageCleanup, setStreamingId, setAbortController, getAbortController]);
 
   const regenerateMessage = useCallback(async (messageId: string) => {
+    console.log('regenerateMessage called for:', messageId);
     setError(null);
 
-    // Find the assistant message to regenerate
     const messageIndex = messages.findIndex(msg => msg.id === messageId);
     if (messageIndex === -1 || messages[messageIndex].role !== 'assistant') {
       setError('재생성할 메시지를 찾을 수 없습니다.');
       return;
     }
 
-    // Truncate messages from the assistant message onwards
     useChatStore.getState().truncateMessagesFrom(messageId);
 
     if (!isOnline) {
@@ -172,70 +176,25 @@ export function useChat() {
       return;
     }
 
-    // Create a new assistant message placeholder
-    const assistantMessage = {
-      role: 'assistant' as const,
-      content: '',
-      isStreaming: true,
-      contentType: messages[messageIndex].contentType, // Inherit content type from the message being regenerated
-    };
-    addMessage(assistantMessage);
-
-    const newAssistantId = useChatStore.getState().messages[useChatStore.getState().messages.length - 1].id;
-    setStreamingId(newAssistantId);
-    setLoading(true);
-
-    try {
-      abortControllerRef.current = new AbortController();
-
-      // Prepare messages for API call (up to the point of regeneration)
-      const apiMessages: ChatCompletionMessageParam[] = useChatStore.getState().messages
-        .filter(msg => msg.id !== newAssistantId)
-        .map(msg => ({ role: msg.role, content: msg.content }));
-
-      await OpenAIService.createChatStream({
-        messages: apiMessages,
-        signal: abortControllerRef.current.signal,
-        onChunk: (chunk) => {
-          appendToStreamingMessage(newAssistantId, chunk);
-        },
-        onComplete: () => {
-          updateMessage(newAssistantId, { isStreaming: false });
-          setStreamingId(null);
-        },
-        onError: (error) => {
-          setError(error.message);
-          const message = useChatStore.getState().messages.find(m => m.id === newAssistantId);
-          if (message && !message.content) {
-            useChatStore.getState().deleteMessage(newAssistantId);
-          } else {
-            // Mark message as not streaming to show regenerate button
-            updateMessage(newAssistantId, { isStreaming: false });
-          }
-          setStreamingId(null);
-        },
-      });
-
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message || '메시지 재생성 중 오류가 발생했습니다.');
-      }
-      const message = useChatStore.getState().messages.find(m => m.id === newAssistantId);
-      if (message && !message.content) {
-        useChatStore.getState().deleteMessage(newAssistantId);
-      }
-    } finally {
-      setLoading(false);
-      setStreamingId(null);
-      abortControllerRef.current = null;
+    const contentType = messages[messageIndex].contentType || 'text';
+    const assistantMessageId = createAssistantMessage(contentType);
+    
+    if (!assistantMessageId) {
+      setError('메시지 생성에 실패했습니다.');
+      return;
     }
-  }, [messages, isOnline, setError, addMessage, setStreamingId, setLoading, appendToStreamingMessage, updateMessage]);
+
+    const apiMessages: ChatCompletionMessageParam[] = useChatStore.getState().messages
+      .filter(msg => msg.id !== assistantMessageId)
+      .map(msg => ({ role: msg.role, content: msg.content }));
+
+    await handleStreaming(apiMessages, assistantMessageId);
+  }, [messages, isOnline, setError, createAssistantMessage, handleStreaming]);
 
   const editAndResendMessage = useCallback(async (messageId: string, newContent: string) => {
+    console.log('editAndResendMessage called for:', messageId);
     setError(null);
 
-    // Perform the edit action in the store. This updates the user message
-    // and deletes all subsequent messages.
     useChatStore.getState().editMessage(messageId, newContent);
 
     if (!isOnline) {
@@ -243,75 +202,23 @@ export function useChat() {
       return;
     }
 
-    // Create assistant message placeholder
-    const assistantMessage = {
-      role: 'assistant' as const,
-      content: '',
-      isStreaming: true,
-      contentType: detectContentType(newContent) as ContentType,
-    };
-    addMessage(assistantMessage);
+    const contentType = detectContentType(newContent) as ContentType;
+    const assistantMessageId = createAssistantMessage(contentType);
     
-    // Get the ID of the placeholder we just added
-    const addedMessages = useChatStore.getState().messages;
-    const actualAssistantId = addedMessages[addedMessages.length - 1]?.id;
-    
-    if (!actualAssistantId) {
+    if (!assistantMessageId) {
       setError('메시지 생성에 실패했습니다.');
       return;
     }
     
-    setStreamingId(actualAssistantId);
-    setLoading(true);
+    const apiMessages: ChatCompletionMessageParam[] = useChatStore.getState().messages
+      .filter(msg => msg.id !== assistantMessageId)
+      .map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      }));
 
-    try {
-      abortControllerRef.current = new AbortController();
-      
-      // Prepare messages for API. Get all messages *except* the new placeholder.
-      const apiMessages: ChatCompletionMessageParam[] = useChatStore.getState().messages
-        .filter(msg => msg.id !== actualAssistantId)
-        .map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        }));
-
-      await OpenAIService.createChatStream({
-        messages: apiMessages,
-        signal: abortControllerRef.current.signal,
-        onChunk: (chunk) => {
-          appendToStreamingMessage(actualAssistantId, chunk);
-        },
-        onComplete: () => {
-          updateMessage(actualAssistantId, { isStreaming: false });
-          setStreamingId(null);
-        },
-        onError: (error) => {
-          setError(error.message);
-          const message = useChatStore.getState().messages.find(m => m.id === actualAssistantId);
-          if (message && !message.content) {
-            useChatStore.getState().deleteMessage(actualAssistantId);
-          } else {
-            // Mark message as not streaming to show regenerate button
-            updateMessage(actualAssistantId, { isStreaming: false });
-          }
-          setStreamingId(null);
-        },
-      });
-      
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message || '메시지 전송 중 오류가 발생했습니다.');
-      }
-      const message = useChatStore.getState().messages.find(m => m.id === actualAssistantId);
-      if (message && !message.content) {
-        useChatStore.getState().deleteMessage(actualAssistantId);
-      }
-    } finally {
-      setLoading(false);
-      setStreamingId(null);
-      abortControllerRef.current = null;
-    }
-  }, [addMessage, updateMessage, appendToStreamingMessage, setLoading, setError, setStreamingId, isOnline]);
+    await handleStreaming(apiMessages, assistantMessageId);
+  }, [isOnline, setError, createAssistantMessage, handleStreaming]);
 
   // Set up offline queue processor
   useEffect(() => {
@@ -323,7 +230,6 @@ export function useChat() {
       setError(`메시지 전송 실패 (${item.data.content.slice(0, 20)}...): ${error.message}`);
     });
 
-    // Start auto-processing when online
     messageQueue.startAutoProcess();
   }, [sendMessage, setError]);
 
