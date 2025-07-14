@@ -17,6 +17,7 @@ export default defineConfig({
         ...builtins.map(m => `node:${m}`),
         ...builtins,
         'nock',
+        '@faker-js/faker',
         'node-fetch',
         'openai'
       ],

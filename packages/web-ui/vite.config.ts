@@ -10,6 +10,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    exclude: ['nock', '@mswjs/interceptors'],
+  },
   server: {
     port: 3000,
     host: true,

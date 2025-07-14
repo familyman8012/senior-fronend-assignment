@@ -3,8 +3,10 @@ import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { retry } from '@/utils/retry';
 
 // Configure OpenAI client
+// In development, we expect a mock server to be running on localhost:3001
 const openai = new OpenAI({
-  apiKey: process.env.VITE_OPENAI_API_KEY || 'test-key',
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY || 'test-key',
+  baseURL: import.meta.env.DEV ? 'http://localhost:3001/v1' : undefined,
   dangerouslyAllowBrowser: true,
 });
 

@@ -51,16 +51,23 @@ src/
 
 ### 설치 및 실행
 
+이 프로젝트는 `packages/openai-api-mock`을 사용하여 OpenAI API를 모킹합니다.
+
 ```bash
-# 의존성 설치
+# 1. 의존성 설치 (루트 디렉토리에서)
 pnpm install
 
-# OpenAI Mock 라이브러리 빌드 (최초 1회)
-cd ../openai-api-mock
+# 2. OpenAI Mock 라이브러리 빌드 (최초 1회)
+cd packages/openai-api-mock
 pnpm build
 cd ../web-ui
 
-# 개발 서버 실행
+# 3. 개발 환경 실행 (두 개의 터미널 필요)
+
+# 터미널 1 - Mock 서버 실행
+pnpm mock
+
+# 터미널 2 - 개발 서버 실행
 pnpm dev
 
 # 프로덕션 빌드
@@ -69,6 +76,9 @@ pnpm build
 # 빌드 결과 미리보기
 pnpm preview
 ```
+
+개발 서버는 http://localhost:3000 에서 실행됩니다.
+Mock 서버는 http://localhost:3001 에서 실행되며, 개발 환경에서 자동으로 연결됩니다.
 
 ### 테스트
 

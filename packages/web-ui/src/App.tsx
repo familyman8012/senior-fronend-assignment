@@ -1,22 +1,10 @@
-import { useEffect } from 'react';
 import ChatContainer from './components/Chat/ChatContainer';
-import { mockOpenAIResponse } from "../../openai-api-mock/dist/index.js";
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ChatHistory } from './components/ChatHistory/ChatHistory';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { SkipNavigation } from './components/SkipNavigation';
 
 function App() {
-  useEffect(() => {
-    // Enable OpenAI mocking with options
-    mockOpenAIResponse(true, {
-      seed: 12345,
-      includeErrors: false,
-      latency: 500,
-      logRequests: true,
-    });
-  }, []);
-
   return (
     <ErrorBoundary>
       <div className="h-full flex flex-col bg-gray-50">
