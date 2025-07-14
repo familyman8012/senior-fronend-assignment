@@ -79,29 +79,57 @@ export function createFunctionCallObject(requestBody) {
   };
 }
 
-// 스트림 상태 관리를 위한 전역 변수
-let currentStreamContent = '';
-let currentStreamIndex = 0;
+// 스트림별 상태 관리를 위한 Map
+const streamStates = new Map();
 
-export function getSteamChatObject(messages = [], isReset = false) {
+export function getSteamChatObject(messages = [], isReset = false, streamId = null) {
   const created = Math.floor(Date.now() / 1000);
+  
+  // 스트림 ID가 없으면 새로 생성
+  if (!streamId) {
+    streamId = `chatcmpl-${faker.string.alphanumeric(30)}`;
+  }
 
   // 새 스트림 시작 또는 리셋
-  if (isReset || !currentStreamContent) {
+  if (isReset || !streamStates.has(streamId)) {
     const contentType = detectContentType(messages);
-    currentStreamContent = getContentSample(contentType);
-    currentStreamIndex = 0;
+    streamStates.set(streamId, {
+      content: getContentSample(contentType),
+      index: 0,
+      id: streamId
+    });
+  }
+
+  const streamState = streamStates.get(streamId);
+  if (!streamState) {
+    return JSON.stringify({
+      id: streamId,
+      object: 'chat.completion.chunk',
+      created: created,
+      model: "gpt-3.5-mock",
+      choices: [{
+        index: 0,
+        delta: { content: '' },
+        logprobs: null,
+        finish_reason: "stop"
+      }]
+    });
   }
 
   // 현재 글자 반환
-  const currentChar = currentStreamContent[currentStreamIndex] || '';
-  currentStreamIndex++;
+  const currentChar = streamState.content[streamState.index] || '';
+  streamState.index++;
 
   // 스트림 완료 여부 확인
-  const isFinished = currentStreamIndex >= currentStreamContent.length;
+  const isFinished = streamState.index >= streamState.content.length;
+  
+  // 완료되면 상태 삭제
+  if (isFinished) {
+    streamStates.delete(streamId);
+  }
 
   let ob = {
-    id: `chatcmpl-${faker.string.alphanumeric(30)}`,
+    id: streamId,
     object: 'chat.completion.chunk',
     created: created,
     model: "gpt-3.5-mock",
@@ -119,4 +147,11 @@ export function getSteamChatObject(messages = [], isReset = false) {
   }
 
   return JSON.stringify(ob);
+}
+
+// 스트림 정리 함수
+export function cleanupStream(streamId) {
+  if (streamId && streamStates.has(streamId)) {
+    streamStates.delete(streamId);
+  }
 }

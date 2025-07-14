@@ -67,7 +67,7 @@ export function mockOpenAIResponse(force = false, options = {}) {
                 const isSteaming = requestBody.stream === true;
 
                 if (isSteaming) {
-                    const stream = createChatStream(requestBody);
+                    const stream = createChatStream(requestBody, this.req);
                     return [200, stream];
                 }
 
