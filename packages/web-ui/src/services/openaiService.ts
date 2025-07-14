@@ -32,6 +32,8 @@ export class OpenAIService {
     onError,
     onComplete,
   }: ChatStreamOptions): Promise<void> {
+    let isCompleted = false;
+    
     try {
       const stream = await openai.chat.completions.create({
         model,
@@ -42,8 +44,9 @@ export class OpenAIService {
       }, { signal });
 
       for await (const chunk of stream) {
+        // Check abort status first
         if (signal?.aborted) {
-          throw new Error('Stream aborted');
+          break;  // Exit the loop instead of throwing
         }
 
         const content = chunk.choices[0]?.delta?.content || '';
@@ -53,8 +56,15 @@ export class OpenAIService {
 
         // Check if stream is finished
         if (chunk.choices[0]?.finish_reason === 'stop') {
+          isCompleted = true;
           onComplete?.();
+          break;
         }
+      }
+      
+      // Handle abort case
+      if (signal?.aborted && !isCompleted) {
+        throw new Error('Stream aborted');
       }
     } catch (error) {
       if (error instanceof Error) {

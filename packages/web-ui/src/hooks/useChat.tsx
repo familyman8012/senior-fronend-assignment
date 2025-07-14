@@ -105,7 +105,11 @@ export function useChat() {
           const message = useChatStore.getState().messages.find(m => m.id === actualAssistantId);
           if (message && !message.content) {
             useChatStore.getState().deleteMessage(actualAssistantId);
+          } else {
+            // Mark message as not streaming to show regenerate button
+            updateMessage(actualAssistantId, { isStreaming: false });
           }
+          setStreamingId(null);
         },
       });
       
@@ -130,8 +134,25 @@ export function useChat() {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
+      
+      // Get the current streaming message and mark it as not streaming
+      const streamingId = useChatStore.getState().currentStreamingId;
+      
+      if (streamingId) {
+        const messages = useChatStore.getState().messages;
+        const message = messages.find(m => m.id === streamingId);
+        
+        if (message && !message.content) {
+          // If message is empty, remove it
+          useChatStore.getState().deleteMessage(streamingId);
+        } else {
+          // Otherwise, just mark it as not streaming to show regenerate button
+          updateMessage(streamingId, { isStreaming: false });
+        }
+        setStreamingId(null);
+      }
     }
-  }, []);
+  }, [updateMessage, setStreamingId]);
 
   const regenerateMessage = useCallback(async (messageId: string) => {
     setError(null);
@@ -187,7 +208,11 @@ export function useChat() {
           const message = useChatStore.getState().messages.find(m => m.id === newAssistantId);
           if (message && !message.content) {
             useChatStore.getState().deleteMessage(newAssistantId);
+          } else {
+            // Mark message as not streaming to show regenerate button
+            updateMessage(newAssistantId, { isStreaming: false });
           }
+          setStreamingId(null);
         },
       });
 
@@ -265,7 +290,11 @@ export function useChat() {
           const message = useChatStore.getState().messages.find(m => m.id === actualAssistantId);
           if (message && !message.content) {
             useChatStore.getState().deleteMessage(actualAssistantId);
+          } else {
+            // Mark message as not streaming to show regenerate button
+            updateMessage(actualAssistantId, { isStreaming: false });
           }
+          setStreamingId(null);
         },
       });
       
