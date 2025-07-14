@@ -9,7 +9,7 @@ import { LoadingIndicator } from '@/components/LoadingIndicator';
 export default function ChatContainer() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messages, error, isLoading, currentStreamingId } = useChatStore();
-  const { sendMessage, cancelStream, regenerateLastMessage } = useChat();
+  const { sendMessage, cancelStream, regenerateMessage } = useChat();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -25,9 +25,9 @@ export default function ChatContainer() {
   const handleRegenerate = useCallback(() => {
     const lastAssistantMessage = [...messages].reverse().find(msg => msg.role === 'assistant');
     if (lastAssistantMessage) {
-      regenerateLastMessage(lastAssistantMessage.id);
+      regenerateMessage(lastAssistantMessage.id);
     }
-  }, [messages, regenerateLastMessage]);
+  }, [messages, regenerateMessage]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Cancel streaming with Escape key

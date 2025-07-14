@@ -11,7 +11,9 @@ interface ChatActions {
   setError: (error: string | null) => void;
   setStreamingId: (id: string | null) => void;
   appendToStreamingMessage: (id: string, content: string) => void;
-  regenerateMessage: (id: string) => void;
+  truncateMessagesFrom: (id: string) => void;
+  editMessage: (id: string, newContent: string) => void;
+  editMessage: (id: string, newContent: string) => void;
   editMessage: (id: string, newContent: string) => void;
 }
 
@@ -90,33 +92,28 @@ export const useChatStore = create<ChatStore>()(
           }));
         },
 
-        regenerateMessage: (id) => {
-          const message = get().messages.find((msg) => msg.id === id);
-          if (!message || message.role !== 'assistant') return;
-
-          // Find the user message before this assistant message
+        truncateMessagesFrom: (id) => {
           const messageIndex = get().messages.findIndex((msg) => msg.id === id);
-          if (messageIndex > 0) {
-            const previousMessage = get().messages[messageIndex - 1];
-            if (previousMessage.role === 'user') {
-              // Delete the assistant message and trigger regeneration
-              get().deleteMessage(id);
-              // The parent component should detect this and resend the user message
-            }
-          }
+          if (messageIndex === -1) return;
+
+          set((state) => ({
+            messages: state.messages.slice(0, messageIndex),
+          }));
         },
 
         editMessage: (id, newContent) => {
-          const message = get().messages.find((msg) => msg.id === id);
-          if (!message || message.role !== 'user') return;
+          set((state) => {
+            const messageIndex = state.messages.findIndex((msg) => msg.id === id);
+            if (messageIndex === -1 || state.messages[messageIndex].role !== 'user') {
+              return state; // No change if message not found or not a user message
+            }
 
-          // Update the user message
-          get().updateMessage(id, { content: newContent });
+            const updatedMessages = state.messages.slice(0, messageIndex + 1).map((msg, index) =>
+              index === messageIndex ? { ...msg, content: newContent } : msg
+            );
 
-          // Delete all messages after this one
-          const messageIndex = get().messages.findIndex((msg) => msg.id === id);
-          const messagesToDelete = get().messages.slice(messageIndex + 1);
-          messagesToDelete.forEach((msg) => get().deleteMessage(msg.id));
+            return { messages: updatedMessages };
+          });
         },
       }),
       {

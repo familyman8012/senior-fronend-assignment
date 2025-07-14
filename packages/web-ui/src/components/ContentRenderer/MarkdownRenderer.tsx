@@ -18,6 +18,7 @@ export const MarkdownRenderer = memo(({ content }: MarkdownRendererProps) => {
             const match = /language-(\w+)/.exec(className || '');
             
             if (!inline && match) {
+           
               return (
                 <SyntaxHighlighter
                   style={oneDark}
@@ -26,7 +27,7 @@ export const MarkdownRenderer = memo(({ content }: MarkdownRendererProps) => {
                   className="rounded-md"
                   {...props}
                 >
-                  {String(children).replace(/\n$/, '')}
+                  {children && String(children).replace(/\n$/, '')}
                 </SyntaxHighlighter>
               );
             }
@@ -101,6 +102,10 @@ export const MarkdownRenderer = memo(({ content }: MarkdownRendererProps) => {
                 {children}
               </blockquote>
             );
+          },
+          // Custom emphasis rendering
+          em({ children }) {
+            return <em className="italic">{children}</em>;
           },
         }}
       >

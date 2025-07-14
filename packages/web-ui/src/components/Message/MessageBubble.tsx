@@ -1,7 +1,7 @@
 import { memo, useState, useCallback } from 'react';
 import { Message } from '@/types/chat';
 import { ContentRenderer } from '@/components/ContentRenderer/ContentRenderer';
-import { useChatStore } from '@/store/chatStore';
+import { useChat } from '@/hooks/useChat';
 import clsx from 'clsx';
 
 interface MessageBubbleProps {
@@ -11,7 +11,7 @@ interface MessageBubbleProps {
 export const MessageBubble = memo(({ message }: MessageBubbleProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
-  const { editMessage, regenerateMessage } = useChatStore();
+  const { regenerateMessage, editAndResendMessage } = useChat();
 
   const isUser = message.role === 'user';
   const isStreaming = message.isStreaming;
@@ -25,10 +25,10 @@ export const MessageBubble = memo(({ message }: MessageBubbleProps) => {
 
   const handleSaveEdit = useCallback(() => {
     if (editContent.trim() !== message.content) {
-      editMessage(message.id, editContent.trim());
+      editAndResendMessage(message.id, editContent.trim());
     }
     setIsEditing(false);
-  }, [editContent, editMessage, message.content, message.id]);
+  }, [editContent, editAndResendMessage, message.content, message.id]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
@@ -98,7 +98,7 @@ export const MessageBubble = memo(({ message }: MessageBubbleProps) => {
             <>
               <ContentRenderer
                 content={message.content}
-                contentType={message.contentType || 'text'}
+                contentType={isUser ? 'text' : message.contentType || 'text'}
               />
               {isStreaming && <span className="inline-block w-2 h-4 bg-gray-400 animate-typing" />}
             </>
@@ -126,7 +126,7 @@ export const MessageBubble = memo(({ message }: MessageBubbleProps) => {
                 >
                   재생성
                 </button>
-              )}
+              )}            
             </>
           )}
         </div>

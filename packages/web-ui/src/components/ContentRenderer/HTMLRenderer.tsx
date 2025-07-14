@@ -51,7 +51,7 @@ export const HTMLRenderer = memo(({ content }: HTMLRendererProps) => {
 
   return (
     <div 
-      className="html-content space-y-2"
+      className="html-content prose prose-sm max-w-none"
       dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
     />
   );

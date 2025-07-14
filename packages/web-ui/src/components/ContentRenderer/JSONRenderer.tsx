@@ -126,11 +126,11 @@ export const JSONRenderer = memo(({ content }: JSONRendererProps) => {
   if (error) {
     return (
       <div className="json-content">
-        <div className="bg-red-50 border border-red-200 rounded p-3 mb-2">
+        {/* <div className="bg-red-50 border border-red-200 rounded p-3 mb-2">
           <p className="text-sm text-red-700">JSON 파싱 오류: {error}</p>
-        </div>
+        </div> */}
         <pre className="bg-gray-100 p-3 rounded overflow-x-auto">
-          <code className="text-sm">{content}</code>
+          <code className="text-sm text-black">{content}</code>
         </pre>
       </div>
     );

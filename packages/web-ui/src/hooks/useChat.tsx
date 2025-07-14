@@ -133,18 +133,156 @@ export function useChat() {
     }
   }, []);
 
-  const regenerateLastMessage = useCallback(async (messageId: string) => {
+  const regenerateMessage = useCallback(async (messageId: string) => {
+    setError(null);
+
+    // Find the assistant message to regenerate
     const messageIndex = messages.findIndex(msg => msg.id === messageId);
-    if (messageIndex > 0) {
-      const previousMessage = messages[messageIndex - 1];
-      if (previousMessage.role === 'user') {
-        // Delete the assistant message
-        useChatStore.getState().deleteMessage(messageId);
-        // Resend the user message
-        await sendMessage(previousMessage.content);
-      }
+    if (messageIndex === -1 || messages[messageIndex].role !== 'assistant') {
+      setError('재생성할 메시지를 찾을 수 없습니다.');
+      return;
     }
-  }, [messages, sendMessage]);
+
+    // Truncate messages from the assistant message onwards
+    useChatStore.getState().truncateMessagesFrom(messageId);
+
+    if (!isOnline) {
+      setError('오프라인 상태에서는 메시지를 재생성할 수 없습니다.');
+      return;
+    }
+
+    // Create a new assistant message placeholder
+    const assistantMessage = {
+      role: 'assistant' as const,
+      content: '',
+      isStreaming: true,
+      contentType: messages[messageIndex].contentType, // Inherit content type from the message being regenerated
+    };
+    addMessage(assistantMessage);
+
+    const newAssistantId = useChatStore.getState().messages[useChatStore.getState().messages.length - 1].id;
+    setStreamingId(newAssistantId);
+    setLoading(true);
+
+    try {
+      abortControllerRef.current = new AbortController();
+
+      // Prepare messages for API call (up to the point of regeneration)
+      const apiMessages: ChatCompletionMessageParam[] = useChatStore.getState().messages
+        .filter(msg => msg.id !== newAssistantId)
+        .map(msg => ({ role: msg.role, content: msg.content }));
+
+      await OpenAIService.createChatStream({
+        messages: apiMessages,
+        signal: abortControllerRef.current.signal,
+        onChunk: (chunk) => {
+          appendToStreamingMessage(newAssistantId, chunk);
+        },
+        onComplete: () => {
+          updateMessage(newAssistantId, { isStreaming: false });
+          setStreamingId(null);
+        },
+        onError: (error) => {
+          setError(error.message);
+          const message = useChatStore.getState().messages.find(m => m.id === newAssistantId);
+          if (message && !message.content) {
+            useChatStore.getState().deleteMessage(newAssistantId);
+          }
+        },
+      });
+
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message || '메시지 재생성 중 오류가 발생했습니다.');
+      }
+      const message = useChatStore.getState().messages.find(m => m.id === newAssistantId);
+      if (message && !message.content) {
+        useChatStore.getState().deleteMessage(newAssistantId);
+      }
+    } finally {
+      setLoading(false);
+      setStreamingId(null);
+      abortControllerRef.current = null;
+    }
+  }, [messages, isOnline, setError, addMessage, setStreamingId, setLoading, appendToStreamingMessage, updateMessage]);
+
+  const editAndResendMessage = useCallback(async (messageId: string, newContent: string) => {
+    setError(null);
+
+    // Perform the edit action in the store. This updates the user message
+    // and deletes all subsequent messages.
+    useChatStore.getState().editMessage(messageId, newContent);
+
+    if (!isOnline) {
+      setError('오프라인 상태에서는 메시지를 수정하여 다시 보낼 수 없습니다.');
+      return;
+    }
+
+    // Create assistant message placeholder
+    const assistantMessage = {
+      role: 'assistant' as const,
+      content: '',
+      isStreaming: true,
+      contentType: detectContentType(newContent) as ContentType,
+    };
+    addMessage(assistantMessage);
+    
+    // Get the ID of the placeholder we just added
+    const addedMessages = useChatStore.getState().messages;
+    const actualAssistantId = addedMessages[addedMessages.length - 1]?.id;
+    
+    if (!actualAssistantId) {
+      setError('메시지 생성에 실패했습니다.');
+      return;
+    }
+    
+    setStreamingId(actualAssistantId);
+    setLoading(true);
+
+    try {
+      abortControllerRef.current = new AbortController();
+      
+      // Prepare messages for API. Get all messages *except* the new placeholder.
+      const apiMessages: ChatCompletionMessageParam[] = useChatStore.getState().messages
+        .filter(msg => msg.id !== actualAssistantId)
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content,
+        }));
+
+      await OpenAIService.createChatStream({
+        messages: apiMessages,
+        signal: abortControllerRef.current.signal,
+        onChunk: (chunk) => {
+          appendToStreamingMessage(actualAssistantId, chunk);
+        },
+        onComplete: () => {
+          updateMessage(actualAssistantId, { isStreaming: false });
+          setStreamingId(null);
+        },
+        onError: (error) => {
+          setError(error.message);
+          const message = useChatStore.getState().messages.find(m => m.id === actualAssistantId);
+          if (message && !message.content) {
+            useChatStore.getState().deleteMessage(actualAssistantId);
+          }
+        },
+      });
+      
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message || '메시지 전송 중 오류가 발생했습니다.');
+      }
+      const message = useChatStore.getState().messages.find(m => m.id === actualAssistantId);
+      if (message && !message.content) {
+        useChatStore.getState().deleteMessage(actualAssistantId);
+      }
+    } finally {
+      setLoading(false);
+      setStreamingId(null);
+      abortControllerRef.current = null;
+    }
+  }, [addMessage, updateMessage, appendToStreamingMessage, setLoading, setError, setStreamingId, isOnline]);
 
   // Set up offline queue processor
   useEffect(() => {
@@ -170,6 +308,7 @@ export function useChat() {
   return {
     sendMessage,
     cancelStream,
-    regenerateLastMessage,
+    regenerateMessage,
+    editAndResendMessage,
   };
 }
