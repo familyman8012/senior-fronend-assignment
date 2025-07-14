@@ -125,11 +125,72 @@ for await (const chunk of stream) {
 
 구현 방법과 우선순위는 자유입니다. 기획 의도와 구현 과정을 간단히 문서화해주세요.
 
+## 로컬 실행 가이드
+
+### 사전 요구사항
+- Node.js 18.0.0 이상
+- pnpm 8.0.0 이상 (또는 npm)
+
+### 실행 방법
+
+```bash
+# 1. 저장소 클론
+git clone [repository-url]
+cd senior-frontend-assignment
+
+# 2. 의존성 설치
+pnpm install
+
+# 3. Mock 라이브러리 빌드 (필수)
+cd packages/openai-api-mock
+pnpm build
+cd ../..
+
+# 4. 웹 애플리케이션 실행
+cd packages/web-ui
+pnpm dev
+
+# 5. 브라우저에서 http://localhost:3000 접속
+```
+
+### 테스트 실행
+
+```bash
+# 웹 UI 디렉토리에서
+cd packages/web-ui
+
+# 단위 테스트
+pnpm test
+
+# E2E 테스트
+pnpm test:e2e
+
+# 테스트 커버리지
+pnpm test:coverage
+```
+
+## 구현 결과
+
+### 필수 구현 사항
+- ✅ 채팅 UI 구현
+- ✅ 스트리밍 응답 처리
+- ✅ 콘텐츠 타입별 렌더링
+- ✅ 에러 및 취소 처리
+
+### 도전과제 구현
+- ✅ 응답 편집/재생성
+- ✅ 오프라인 모드
+- ✅ 채팅 히스토리
+- ✅ 성능 최적화
+- ✅ 접근성
+
+자세한 구현 내용은 [CHALLENGE_IMPLEMENTATION.md](./CHALLENGE_IMPLEMENTATION.md)를 참고해주세요.
+
 ## 제출 방법
 
 1. **코드**: GitHub 리포지토리 URL
-2. **실행 방법**: README.md에 로컬 실행 가이드 포함
-3. **도전과제 문서**: 구현한 기능의 기획 의도와 구현 방법 설명
+2. **실행 방법**: 위의 로컬 실행 가이드 참조
+3. **도전과제 문서**: [CHALLENGE_IMPLEMENTATION.md](./CHALLENGE_IMPLEMENTATION.md) 파일 참조
 
 ## 질문사항
 

@@ -1,4 +1,4 @@
-import nock from 'nock';
+import * as nock from 'nock';
 import { faker } from '@faker-js/faker';
 import { getChatResponce } from './chat.js';
 import { createChatStream } from './chat.stream.js';
