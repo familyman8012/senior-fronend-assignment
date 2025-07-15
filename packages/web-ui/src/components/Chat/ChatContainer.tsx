@@ -8,8 +8,8 @@ import { LoadingIndicator } from '@/components/LoadingIndicator';
 
 export default function ChatContainer() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, error, isLoading, currentStreamingId } = useChatStore();
-  const { sendMessage, cancelStream, regenerateMessage } = useChat();
+  const { messages, error, currentStreamingId } = useChatStore();
+  const { sendMessage, cancelStream, regenerateMessage, editAndResendMessage, isStreaming } = useChat();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -68,7 +68,11 @@ export default function ChatContainer() {
           </div>
         ) : (
           <>
-            <MessageList messages={messages} />
+            <MessageList 
+              messages={messages} 
+              onRegenerate={regenerateMessage}
+              onEditAndResend={editAndResendMessage}
+            />
             <div ref={scrollRef} />
           </>
         )}
@@ -91,7 +95,7 @@ export default function ChatContainer() {
         )}
         <MessageInput
           onSendMessage={handleSendMessage}
-          isLoading={isLoading}
+          isLoading={isStreaming}
           disabled={!!currentStreamingId}
         />
       </div>

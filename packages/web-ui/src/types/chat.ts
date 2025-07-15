@@ -13,7 +13,6 @@ export interface Message {
 
 export interface ChatState {
   messages: Message[];
-  isLoading: boolean;
   error: string | null;
   currentStreamingId: string | null;
 }

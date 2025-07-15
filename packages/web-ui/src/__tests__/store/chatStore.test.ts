@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useChatStore, detectContentType } from '@/store/chatStore';
+import { useChatStore } from '@/store/chatStore';
 
 describe('chatStore', () => {
   beforeEach(() => {
@@ -9,28 +9,6 @@ describe('chatStore', () => {
       isLoading: false,
       error: null,
       currentStreamingId: null,
-    });
-  });
-
-  describe('detectContentType', () => {
-    it('should detect markdown content', () => {
-      expect(detectContentType('Show me markdown example')).toBe('markdown');
-      expect(detectContentType('md 형식으로 보여주세요')).toBe('markdown');
-    });
-
-    it('should detect HTML content', () => {
-      expect(detectContentType('Show me html tags')).toBe('html');
-      expect(detectContentType('HTML 예시를 보여주세요')).toBe('html');
-    });
-
-    it('should detect JSON content', () => {
-      expect(detectContentType('Return json data')).toBe('json');
-      expect(detectContentType('JSON 형식으로 주세요')).toBe('json');
-    });
-
-    it('should default to text', () => {
-      expect(detectContentType('Hello world')).toBe('text');
-      expect(detectContentType('안녕하세요')).toBe('text');
     });
   });
 

@@ -6,15 +6,22 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 
 interface MessageListProps {
   messages: Message[];
+  onRegenerate?: (messageId: string) => void;
+  onEditAndResend?: (messageId: string, newContent: string) => void;
 }
 
-export const MessageList = memo(({ messages }: MessageListProps) => {
+export const MessageList = memo(({ messages, onRegenerate, onEditAndResend }: MessageListProps) => {
   // For small message lists, don't use virtualization
   if (messages.length < 50) {
     return (
       <div className="space-y-4">
         {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
+          <MessageBubble 
+            key={message.id} 
+            message={message} 
+            onRegenerate={onRegenerate}
+            onEditAndResend={onEditAndResend}
+          />
         ))}
       </div>
     );
@@ -23,7 +30,11 @@ export const MessageList = memo(({ messages }: MessageListProps) => {
   // For large message lists, use virtualization
   const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => (
     <div style={style}>
-      <MessageBubble message={messages[index]} />
+      <MessageBubble 
+        message={messages[index]} 
+        onRegenerate={onRegenerate}
+        onEditAndResend={onEditAndResend}
+      />
     </div>
   );
 

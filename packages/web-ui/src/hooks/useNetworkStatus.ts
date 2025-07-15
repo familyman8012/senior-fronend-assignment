@@ -1,5 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 
+declare global {
+  interface NetworkInformation extends EventTarget {
+    readonly effectiveType?: '2g' | '3g' | '4g' | 'slow-2g';
+    readonly rtt?: number; // Round-trip time in milliseconds
+    readonly downlink?: number; // Downlink speed in megabits per second
+    readonly saveData?: boolean;
+    onchange?: EventListener;
+  }
+
+  interface Navigator {
+    connection?: NetworkInformation;
+    mozConnection?: NetworkInformation;
+    webkitConnection?: NetworkInformation;
+  }
+}
+
 interface NetworkStatus {
   isOnline: boolean;
   isSlowConnection: boolean;
@@ -15,16 +31,16 @@ export function useNetworkStatus(): NetworkStatus {
   });
 
   const updateNetworkStatus = useCallback(() => {
-    const connection = (navigator as any).connection || 
-                      (navigator as any).mozConnection || 
-                      (navigator as any).webkitConnection;
+    const connection = navigator.connection || 
+                       navigator.mozConnection || 
+                       navigator.webkitConnection;
 
     setStatus({
       isOnline: navigator.onLine,
       isSlowConnection: connection ? 
         connection.effectiveType === 'slow-2g' || 
         connection.effectiveType === '2g' || 
-        connection.rtt > 500 : false,
+        (connection.rtt !== undefined && connection.rtt > 500) : false,
       effectiveType: connection?.effectiveType,
       rtt: connection?.rtt,
       downlink: connection?.downlink,
@@ -47,9 +63,9 @@ export function useNetworkStatus(): NetworkStatus {
     window.addEventListener('offline', handleOffline);
 
     // Listen to connection changes if available
-    const connection = (navigator as any).connection || 
-                      (navigator as any).mozConnection || 
-                      (navigator as any).webkitConnection;
+    const connection = navigator.connection || 
+                       navigator.mozConnection || 
+                       navigator.webkitConnection;
 
     if (connection) {
       connection.addEventListener('change', updateNetworkStatus);

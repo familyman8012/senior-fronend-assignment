@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { retry } from '@/utils/retry';
+import { createAppError, ErrorType } from '@/utils/errorHandling';
 
 // Configure OpenAI client
 // In development, we expect a mock server to be running on localhost:3001
@@ -65,14 +66,17 @@ export class OpenAIService {
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('429')) {
-          onError?.(new Error('요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.'));
+          onError?.(createAppError('요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.', ErrorType.RATE_LIMIT, true, 429));
         } else if (error.message.includes('401')) {
-          onError?.(new Error('인증에 실패했습니다. API 키를 확인해주세요.'));
+          onError?.(createAppError('인증에 실패했습니다. API 키를 확인해주세요.', ErrorType.AUTHENTICATION, false, 401));
+        } else if (error.message.includes('abort')) {
+          // Don't call onError for user-initiated cancellations
+          return;
         } else {
-          onError?.(new Error(`오류가 발생했습니다: ${error.message}`));
+          onError?.(createAppError(`오류가 발생했습니다: ${error.message}`, ErrorType.UNKNOWN, true));
         }
       } else {
-        onError?.(new Error('알 수 없는 오류가 발생했습니다.'));
+        onError?.(createAppError('알 수 없는 오류가 발생했습니다.', ErrorType.UNKNOWN, true));
       }
     }
   }

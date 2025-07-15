@@ -1,17 +1,17 @@
 import { memo, useState, useCallback } from 'react';
 import { Message } from '@/types/chat';
 import { ContentRenderer } from '@/components/ContentRenderer/ContentRenderer';
-import { useChat } from '@/hooks/useChat';
 import clsx from 'clsx';
 
 interface MessageBubbleProps {
   message: Message;
+  onRegenerate?: (messageId: string) => void;
+  onEditAndResend?: (messageId: string, newContent: string) => void;
 }
 
-export const MessageBubble = memo(({ message }: MessageBubbleProps) => {
+export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: MessageBubbleProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
-  const { regenerateMessage, editAndResendMessage } = useChat();
 
   const isUser = message.role === 'user';
   const isStreaming = message.isStreaming;
@@ -24,11 +24,11 @@ export const MessageBubble = memo(({ message }: MessageBubbleProps) => {
   }, [isUser, isStreaming, message.content]);
 
   const handleSaveEdit = useCallback(() => {
-    if (editContent.trim() !== message.content) {
-      editAndResendMessage(message.id, editContent.trim());
+    if (editContent.trim() !== message.content && onEditAndResend) {
+      onEditAndResend(message.id, editContent.trim());
     }
     setIsEditing(false);
-  }, [editContent, editAndResendMessage, message.content, message.id]);
+  }, [editContent, onEditAndResend, message.content, message.id]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
@@ -36,10 +36,10 @@ export const MessageBubble = memo(({ message }: MessageBubbleProps) => {
   }, [message.content]);
 
   const handleRegenerate = useCallback(() => {
-    if (!isUser && !isStreaming) {
-      regenerateMessage(message.id);
+    if (!isUser && !isStreaming && onRegenerate) {
+      onRegenerate(message.id);
     }
-  }, [isUser, isStreaming, regenerateMessage, message.id]);
+  }, [isUser, isStreaming, onRegenerate, message.id]);
 
   const formattedTime = new Date(message.timestamp).toLocaleTimeString('ko-KR', {
     hour: '2-digit',
