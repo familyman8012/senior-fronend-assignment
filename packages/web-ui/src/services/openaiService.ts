@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import { ChatCompletionMessageParam, ChatCompletionChunk } from 'openai/resources/chat/completions';
 import { retry } from '@/utils/retry';
 import { createAppError, ErrorType } from '@/utils/errorHandling';
 
@@ -17,10 +17,14 @@ export interface ChatStreamOptions {
   temperature?: number;
   maxTokens?: number;
   signal?: AbortSignal;
-  onChunk?: (chunk: string) => void;
+  onChunk?: (chunk: string, contentType?: string) => void;
   onError?: (error: Error) => void;
   onComplete?: () => void;
 }
+
+type DeltaWithContentType = ChatCompletionChunk.Choice.Delta & {
+  contentType?: string;
+};
 
 export class OpenAIService {
   static async createChatStream({
@@ -44,6 +48,8 @@ export class OpenAIService {
         stream: true,
       }, { signal });
 
+      let detectedContentType: string | undefined;
+      
       for await (const chunk of stream) {
         // Check abort status first
         if (signal?.aborted) {
@@ -51,8 +57,15 @@ export class OpenAIService {
         }
 
         const content = chunk.choices[0]?.delta?.content || '';
+        const contentType = (chunk.choices[0]?.delta as DeltaWithContentType)?.contentType;
+        
+        // Store contentType when first detected
+        if (contentType && !detectedContentType) {
+          detectedContentType = contentType;
+        }
+        
         if (content && onChunk) {
-          onChunk(content);
+          onChunk(content, detectedContentType);
         }
 
         // Check if stream is finished

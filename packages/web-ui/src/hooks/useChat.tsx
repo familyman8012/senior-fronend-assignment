@@ -38,6 +38,16 @@ export function useChat() {
   ) => {
     setError(null);
 
+    if (!isOnline) {
+      const errorMessages = {
+        send: '오프라인 상태입니다. 네트워크 연결을 확인해주세요.',
+        regenerate: '오프라인 상태에서는 메시지를 재생성할 수 없습니다.',
+        editAndResend: '오프라인 상태에서는 메시지를 수정하여 다시 보낼 수 없습니다.',
+      };
+      setError(errorMessages[type]);
+      return;
+    }
+
     // Type-specific preprocessing
     if (type === 'send') {
       const userMessage = {
@@ -45,32 +55,15 @@ export function useChat() {
         content: params.content!,
       };
       addMessage(userMessage);
-
-      if (!isOnline) {
-        setError('오프라인 상태입니다. 네트워크 연결을 확인해주세요.');
-        return;
-      }
     } else if (type === 'regenerate') {
-      console.log('regenerateMessage called for:', params.messageId);
       const messageIndex = messages.findIndex(msg => msg.id === params.messageId);
       if (messageIndex === -1 || messages[messageIndex].role !== 'assistant') {
         setError('재생성할 메시지를 찾을 수 없습니다.');
         return;
       }
       useChatStore.getState().truncateMessagesFrom(params.messageId!);
-
-      if (!isOnline) {
-        setError('오프라인 상태에서는 메시지를 재생성할 수 없습니다.');
-        return;
-      }
     } else if (type === 'editAndResend') {
-      console.log('editAndResendMessage called for:', params.messageId);
       useChatStore.getState().editMessage(params.messageId!, params.newContent!);
-
-      if (!isOnline) {
-        setError('오프라인 상태에서는 메시지를 수정하여 다시 보낼 수 없습니다.');
-        return;
-      }
     }
 
     // Get content type from previous message for regenerate

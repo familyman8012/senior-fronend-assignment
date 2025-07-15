@@ -14,6 +14,7 @@ export function createDefaultResponse(created, messages = []) {
         message: {
           content,
           role: "assistant",
+          contentType, // Add contentType to message
         },
         logprobs: null,
       },
@@ -95,6 +96,7 @@ export function getSteamChatObject(messages = [], isReset = false, streamId = nu
     const contentType = detectContentType(messages);
     streamStates.set(streamId, {
       content: getContentSample(contentType),
+      contentType, // Store contentType
       index: 0,
       id: streamId
     });
@@ -138,7 +140,9 @@ export function getSteamChatObject(messages = [], isReset = false, streamId = nu
       {
         index: 0,
         delta: {
-          content: currentChar
+          content: currentChar,
+          // Include contentType in first chunk or when finished
+          ...(streamState.index === 1 || isFinished ? { contentType: streamState.contentType } : {})
         },
         logprobs: null,
         finish_reason: isFinished ? "stop" : null

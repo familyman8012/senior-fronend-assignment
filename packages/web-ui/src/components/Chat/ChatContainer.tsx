@@ -22,19 +22,20 @@ export default function ChatContainer() {
     await sendMessage(content);
   }, [sendMessage]);
 
-  const handleRegenerate = useCallback(() => {
+  const handleRetry = useCallback(() => {
+    // Check if last message is from user (failed send scenario)
+    const lastMessage = messages[messages.length - 1];
     const lastAssistantMessage = [...messages].reverse().find(msg => msg.role === 'assistant');
-    if (lastAssistantMessage) {
+    
+    if (lastMessage?.role === 'user' && !lastAssistantMessage) {
+      // Resend the last user message
+      sendMessage(lastMessage.content);
+    } else if (lastAssistantMessage) {
+      // Regenerate the last assistant message
       regenerateMessage(lastAssistantMessage.id);
     }
-  }, [messages, regenerateMessage]);
+  }, [messages, regenerateMessage, sendMessage]);
 
-  const handleRetrySendMessage = useCallback(() => {
-    const lastUserMessage = [...messages].reverse().find(msg => msg.role === 'user');
-    if (lastUserMessage) {
-      editAndResendMessage(lastUserMessage.id, lastUserMessage.content);
-    }
-  }, [messages, editAndResendMessage]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Cancel streaming with Escape key
@@ -85,8 +86,8 @@ export default function ChatContainer() {
         )}
         
         {error && (
-          <div className="sticky bottom-0 mt-4">
-            <ErrorAlert message={error} onRetry={handleRetrySendMessage} />
+          <div className="sticky bottom-0 mt-4">            
+            <ErrorAlert message={error} onRetry={handleRetry} />
           </div>
         )}
       </div>

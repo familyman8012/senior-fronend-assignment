@@ -28,10 +28,10 @@ export function useChatMutations() {
 
   // Unified mutation for all message operations
   const messageMutation = useMutation({
-    mutationFn: async ({ type, content, messageId, newContent, assistantMessageId }: MessageMutationVariables) => {
+    mutationFn: async ({ type, assistantMessageId }: MessageMutationVariables) => {
       if (!isOnline) {
         const errorMessages = {
-          send: '오프라인 상태입니다. 온라인 상태가 되면 메시지가 자동으로 전송됩니다.',
+          send: '오프라인 상태입니다. 네트워크 연결을 확인해주세요.',
           regenerate: '오프라인 상태에서는 메시지를 재생성할 수 없습니다.',
           editAndResend: '오프라인 상태에서는 메시지를 수정하여 다시 보낼 수 없습니다.',
         };
@@ -43,31 +43,28 @@ export function useChatMutations() {
       setStreamingId(assistantMessageId);
 
       const currentMessages = useChatStore.getState().messages;
-      let apiMessages: ChatCompletionMessageParam[];
-
-      if (type === 'send') {
-        // For send, exclude the last message (the new assistant message)
-        apiMessages = currentMessages
-          .slice(0, -1)
-          .map(msg => ({
-            role: msg.role,
-            content: msg.content,
-          }));
-      } else {
-        // For regenerate and editAndResend, filter out the assistant message
-        apiMessages = currentMessages
-          .filter(msg => msg.id !== assistantMessageId)
-          .map(msg => ({
-            role: msg.role,
-            content: msg.content,
-          }));
-      }
+      const apiMessages: ChatCompletionMessageParam[] = (
+        type === 'send'
+          ? currentMessages.slice(0, -1)
+          : currentMessages.filter(msg => msg.id !== assistantMessageId)
+      ).map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      }));
 
       await OpenAIService.createChatStream({
         messages: apiMessages,
         signal: controller.signal,
-        onChunk: (chunk) => {
+        onChunk: (chunk, contentType) => {
           appendToStreamingMessage(assistantMessageId, chunk);
+          
+          // Update contentType when first detected
+          if (contentType) {
+            const message = useChatStore.getState().messages.find(m => m.id === assistantMessageId);
+            if (message && message.contentType === 'text') {
+              updateMessage(assistantMessageId, { contentType: contentType as ContentType });
+            }
+          }
         },
         onComplete: () => {
           updateMessage(assistantMessageId, { isStreaming: false });

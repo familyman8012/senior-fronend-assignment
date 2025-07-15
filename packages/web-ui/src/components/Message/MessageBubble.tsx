@@ -78,6 +78,7 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
                 className="w-full p-2 border border-gray-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 autoFocus
+                placeholder='메시지를 입력하세요.'
               />
               <div className="flex gap-2">
                 <button
