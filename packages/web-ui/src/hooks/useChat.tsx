@@ -11,6 +11,9 @@ export function useChat() {
     addMessage,
     setError,
     messages,
+    currentChatId,
+    createNewChat,
+    saveCurrentChat,
   } = useChatStore();
   
   const { messageMutation, cancelStream } = useChatMutations();
@@ -44,11 +47,19 @@ export function useChat() {
 
     // Type-specific preprocessing
     if (type === 'send') {
+      // Create new chat if this is the first message
+      if (!currentChatId && messages.length === 0) {
+        createNewChat();
+      }
+      
       const userMessage = {
         role: 'user' as const,
         content: params.content!,
       };
       addMessage(userMessage);
+      
+      // Auto-save after adding user message
+      setTimeout(() => saveCurrentChat(), 100);
     } else if (type === 'regenerate') {
       const messageIndex = messages.findIndex(msg => msg.id === params.messageId);
       if (messageIndex === -1 || messages[messageIndex].role !== 'assistant') {
@@ -88,6 +99,10 @@ export function useChat() {
         onError: (error) => {
           const appError = parseError(error);
           setError(appError.message);
+        },
+        onSuccess: () => {
+          // Auto-save after assistant message is complete
+          setTimeout(() => saveCurrentChat(), 100);
         },
       }
     );

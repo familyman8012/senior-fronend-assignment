@@ -24,6 +24,7 @@ export function useChatMutations() {
     setStreamingId,
     setAbortController,
     getAbortController,
+    saveCurrentChat,
   } = useChatStore();
 
   // Unified mutation for all message operations
@@ -69,6 +70,8 @@ export function useChatMutations() {
         onComplete: () => {
           updateMessage(assistantMessageId, { isStreaming: false });
           setStreamingId(null);
+          // Auto-save after streaming completes
+          setTimeout(() => saveCurrentChat(), 100);
         },
         onError: (error) => {
           throw error;

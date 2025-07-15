@@ -19,30 +19,16 @@ export const ChatHistory = memo(() => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   
-  const { messages, clearMessages, addMessage } = useChatStore();
+  const { messages, clearMessages, addMessage, currentChatId, setCurrentChatId } = useChatStore();
 
-  // Save current session
+  // Save current session (새 대화 시작)
   const saveCurrentSession = useCallback(() => {
     if (messages.length === 0) return;
 
-    const title = messages[0].content.slice(0, 50) + (messages[0].content.length > 50 ? '...' : '');
-    const newSession: ChatSession = {
-      id: `session_${Date.now()}`,
-      title,
-      messages: [...messages],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    setSessions(prev => [newSession, ...prev]);
-    
-    // Save to localStorage
-    const allSessions = [newSession, ...sessions];
-    localStorage.setItem('chatSessions', JSON.stringify(allSessions));
-    
-    // Clear current messages
+    // Clear current messages and start new chat
     clearMessages();
-  }, [messages, sessions, clearMessages]);
+    setCurrentChatId(null);
+  }, [messages, clearMessages, setCurrentChatId]);
 
   // Load session
   const loadSession = useCallback((sessionId: string) => {
@@ -51,6 +37,9 @@ export const ChatHistory = memo(() => {
 
     // Clear current messages
     clearMessages();
+    
+    // Set current chat ID for continuity
+    setCurrentChatId(sessionId);
     
     // Load session messages
     session.messages.forEach(msg => {
@@ -63,7 +52,7 @@ export const ChatHistory = memo(() => {
 
     setSelectedSessionId(sessionId);
     setIsOpen(false);
-  }, [sessions, clearMessages, addMessage]);
+  }, [sessions, clearMessages, addMessage, setCurrentChatId]);
 
   // Delete session
   const deleteSession = useCallback((sessionId: string) => {
@@ -114,22 +103,41 @@ export const ChatHistory = memo(() => {
     )
   );
 
-  // Load sessions from localStorage on mount
+  // Load sessions from localStorage on mount and sync with changes
   useState(() => {
-    const stored = localStorage.getItem('chatSessions');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored, (key, value) => {
-          if (key === 'createdAt' || key === 'updatedAt') {
-            return new Date(value);
-          }
-          return value;
-        }) as ChatSession[];
-        setSessions(parsed);
-      } catch (error) {
-        console.error('Failed to load chat sessions:', error);
+    const loadSessions = () => {
+      const stored = localStorage.getItem('chatSessions');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored, (key, value) => {
+            if (key === 'createdAt' || key === 'updatedAt') {
+              return new Date(value);
+            }
+            return value;
+          }) as ChatSession[];
+          setSessions(parsed);
+        } catch (error) {
+          console.error('Failed to load chat sessions:', error);
+        }
       }
-    }
+    };
+    
+    loadSessions();
+    
+    // Listen for storage changes to sync between tabs
+    const handleStorageChange = () => {
+      loadSessions();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Poll for changes every 2 seconds (to catch changes in the same tab)
+    const interval = setInterval(loadSessions, 2000);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   });
 
   return (
@@ -173,9 +181,9 @@ export const ChatHistory = memo(() => {
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   )}
                 >
-                  현재 대화 저장
+                  새 대화 시작
                 </button>
-                <button
+                {/* <button
                   onClick={clearMessages}
                   disabled={messages.length === 0}
                   className={clsx(
@@ -185,8 +193,8 @@ export const ChatHistory = memo(() => {
                       : 'bg-gray-600 text-white hover:bg-gray-700'
                   )}
                 >
-                  새 대화
-                </button>
+                  채팅 히스토리 모두 삭제
+                </button> */}
               </div>
 
               <input
@@ -207,7 +215,9 @@ export const ChatHistory = memo(() => {
                     key={session.id}
                     className={clsx(
                       'p-3 rounded-lg border cursor-pointer transition-colors',
-                      selectedSessionId === session.id
+                      currentChatId === session.id
+                        ? 'border-green-500 bg-green-50'
+                        : selectedSessionId === session.id
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:bg-gray-50'
                     )}
