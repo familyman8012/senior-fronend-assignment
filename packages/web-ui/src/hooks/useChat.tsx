@@ -36,17 +36,11 @@ export function useChat() {
     type: 'send' | 'regenerate' | 'editAndResend',
     params: { content?: string; messageId?: string; newContent?: string }
   ) => {
-    setError(null);
-
     if (!isOnline) {
-      const errorMessages = {
-        send: '오프라인 상태입니다. 네트워크 연결을 확인해주세요.',
-        regenerate: '오프라인 상태에서는 메시지를 재생성할 수 없습니다.',
-        editAndResend: '오프라인 상태에서는 메시지를 수정하여 다시 보낼 수 없습니다.',
-      };
-      setError(errorMessages[type]);
+      // 오프라인 상태에서는 아무 작업도 수행하지 않고, OfflineIndicator가 표시되도록 합니다.
       return;
     }
+    setError(null);
 
     // Type-specific preprocessing
     if (type === 'send') {

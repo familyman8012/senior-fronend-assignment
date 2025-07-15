@@ -11,6 +11,8 @@ interface ChatSession {
   updatedAt: Date;
 }
 
+
+
 export const ChatHistory = memo(() => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
@@ -117,12 +119,13 @@ export const ChatHistory = memo(() => {
     const stored = localStorage.getItem('chatSessions');
     if (stored) {
       try {
-        const parsed = JSON.parse(stored);
-        setSessions(parsed.map((s: any) => ({
-          ...s,
-          createdAt: new Date(s.createdAt),
-          updatedAt: new Date(s.updatedAt),
-        })));
+        const parsed = JSON.parse(stored, (key, value) => {
+          if (key === 'createdAt' || key === 'updatedAt') {
+            return new Date(value);
+          }
+          return value;
+        }) as ChatSession[];
+        setSessions(parsed);
       } catch (error) {
         console.error('Failed to load chat sessions:', error);
       }
