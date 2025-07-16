@@ -1,92 +1,87 @@
-const CACHE_NAME = 'ai-chat-v1';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'chat-app-v1';
+const urlsToCache = [
   '/',
   '/index.html',
-  '/manifest.json',
+  '/manifest.json'
 ];
 
-// Install event - cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
   );
+  // Force the waiting service worker to become the active service worker
   self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+self.addEventListener('fetch', (event) => {
+  // Skip API requests - let them go to network
+  if (event.request.url.includes('/api/') || event.request.url.includes('api.openai.com')) {
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
+
+        // Clone the request
+        const fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest).then((response) => {
+          // Check if valid response
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+
+          // Clone the response
+          const responseToCache = response.clone();
+
+          // Cache CSS and JS files dynamically
+          if (event.request.url.includes('.js') || event.request.url.includes('.css')) {
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+          }
+
+          return response;
+        });
+      })
+      .catch(() => {
+        // Offline fallback for navigation requests
+        if (event.request.destination === 'document') {
+          return caches.match('/').then((response) => {
+            if (response) {
+              return response;
+            }
+            return caches.match('/offline.html');
+          });
+        }
+      })
+  );
+});
+
 self.addEventListener('activate', (event) => {
+  const cacheWhitelist = [CACHE_NAME];
+
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
             return caches.delete(cacheName);
           }
         })
       );
     })
   );
+  // Take control of all pages
   self.clients.claim();
 });
-
-// Fetch event - serve from cache, fallback to network
-self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
-
-  // Skip API requests
-  if (event.request.url.includes('/api/') || event.request.url.includes('api.openai.com')) {
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached response and update cache in background
-        event.waitUntil(
-          fetch(event.request).then((response) => {
-            if (response && response.status === 200) {
-              const responseClone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, responseClone);
-              });
-            }
-          }).catch(() => {
-            // Ignore network errors for background update
-          })
-        );
-        return cachedResponse;
-      }
-
-      // If not in cache, fetch from network
-      return fetch(event.request).then((response) => {
-        // Cache successful responses
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return response;
-      }).catch(() => {
-        // Return offline page if available
-        return caches.match('/offline.html');
-      });
-    })
-  );
-});
-
-// Background sync for offline messages
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-messages') {
-    event.waitUntil(syncMessages());
-  }
-});
-
-async function syncMessages() {
-  // This would be implemented to sync offline messages
-  // For now, it's a placeholder for the offline queue functionality
-  console.log('Syncing offline messages...');
-}
