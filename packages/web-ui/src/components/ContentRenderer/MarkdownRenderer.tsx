@@ -33,7 +33,7 @@ const markdownComponents: Components = {
     }
     
     return (
-      <code className="bg-gray-700 px-1 py-0.5 rounded text-sm" {...props}>
+      <code className="bg-gray-200 px-1 py-0.5 rounded text-sm" {...props}>
         {children}
       </code>
     );
@@ -42,25 +42,25 @@ const markdownComponents: Components = {
   table({ children }) {
     return (
       <div className="overflow-x-auto my-4">
-        <table className="min-w-full divide-y divide-gray-700">
+        <table className="min-w-full divide-y divide-gray-200">
           {children}
         </table>
       </div>
     );
   },
   thead({ children }) {
-    return <thead className="bg-gray-800">{children}</thead>;
+    return <thead className="bg-gray-50">{children}</thead>;
   },
   th({ children }) {
     return (
-      <th className="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
         {children}
       </th>
     );
   },
   td({ children }) {
     return (
-      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-100 bg-gray-800">
+      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 bg-white">
         {children}
       </td>
     );
@@ -72,7 +72,7 @@ const markdownComponents: Components = {
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-400 hover:text-blue-300 underline"
+        className="text-blue-600 hover:text-blue-800 underline"
       >
         {children}
       </a>
@@ -98,7 +98,7 @@ const markdownComponents: Components = {
   // Custom blockquote
   blockquote({ children }) {
     return (
-      <blockquote className="border-l-4 border-gray-600 pl-4 py-2 my-2 italic text-gray-300">
+      <blockquote className="border-l-4 border-gray-300 pl-4 py-2 my-2 italic text-gray-700">
         {children}
       </blockquote>
     );
@@ -111,7 +111,7 @@ const markdownComponents: Components = {
 
 export const MarkdownRenderer = memo(({ content }: MarkdownRendererProps) => {
   return (
-    <div className="markdown-content prose prose-sm prose-invert max-w-none">
+    <div className="markdown-content prose prose-sm max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={markdownComponents}

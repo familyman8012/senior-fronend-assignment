@@ -56,17 +56,17 @@ export function MessageInput({ onSendMessage, isLoading, disabled }: MessageInpu
           placeholder="메시지를 입력하세요... (Shift+Enter로 줄바꿈)"
           disabled={disabled}
           className={clsx(
-            'w-full px-4 py-2 border border-gray-600 rounded-lg resize-none',
-            'bg-gray-700 text-white placeholder-gray-400',
+            'w-full px-4 py-3 border border-gray-300 rounded-lg resize-none',
+            'bg-white text-gray-900 placeholder-gray-400',
             'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-            'disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-500',
-            'min-h-[42px] max-h-[120px]'
+            'disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400',
+            'min-h-[48px] max-h-[120px]'
           )}
           rows={1}
           aria-label="메시지 입력"
         />
         
-        <div className="absolute bottom-2 right-2 text-xs text-gray-500">
+        <div className="absolute bottom-2 right-2 text-xs text-gray-400">
           {message.length > 0 && `${message.length} 자`}
         </div>
       </div>
@@ -78,8 +78,8 @@ export function MessageInput({ onSendMessage, isLoading, disabled }: MessageInpu
           'px-4 py-2 rounded-lg font-medium transition-colors',
           'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
           !message.trim() || disabled || isLoading
-            ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-            : 'bg-blue-600 text-white hover:bg-blue-700'
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-gray-900 text-white hover:bg-gray-800'
         )}
         aria-label="메시지 전송"
       >
@@ -104,8 +104,10 @@ export function MessageInput({ onSendMessage, isLoading, disabled }: MessageInpu
             />
           </svg>
         ) : (
-          <div className="w-5 h-5 rounded border border-gray-500 flex items-center justify-center text-xs text-gray-400">
-            svg영역
+          <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center">
+            <div className="w-3 h-3 rounded-full border border-white flex items-center justify-center text-[8px] text-white">
+              svg영역
+            </div>
           </div>
         )}
       </button>

@@ -65,8 +65,8 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
       <div className="flex-1 max-w-[70%]">
         <div
           className={clsx(
-            'rounded-lg px-4 py-3 shadow-sm',
-            isUser ? 'bg-chat-user ml-auto text-white' : 'bg-chat-ai text-gray-100',
+            'rounded-lg px-4 py-3',
+            isUser ? 'bg-chat-user ml-auto text-gray-900' : 'bg-chat-ai text-gray-900',
             isStreaming && 'animate-fade-in'
           )}
         >
@@ -75,7 +75,7 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full p-2 border border-gray-600 bg-gray-700 text-white rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 bg-white text-gray-900 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 autoFocus
                 placeholder='메시지를 입력하세요.'
@@ -89,7 +89,7 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  className="px-3 py-1 text-sm bg-gray-600 text-gray-200 rounded hover:bg-gray-500"
+                  className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
                 >
                   취소
                 </button>
@@ -101,19 +101,19 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
                 content={message.content}
                 contentType={isUser ? 'text' : message.contentType || 'text'}
               />
-              {isStreaming && <span className="inline-block w-2 h-4 bg-gray-500 animate-typing" />}
+              {isStreaming && <span className="inline-block w-2 h-4 bg-gray-400 animate-typing" />}
             </>
           )}
         </div>
 
-        <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
           <span>{formattedTime}</span>
           {!isStreaming && (
             <>
               {isUser && (
                 <button
                   onClick={handleEdit}
-                  className="hover:text-gray-300"
+                  className="hover:text-gray-700"
                   aria-label="메시지 편집"
                 >
                   편집
@@ -122,7 +122,7 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
               {!isUser && (
                 <button
                   onClick={handleRegenerate}
-                  className="hover:text-gray-300"
+                  className="hover:text-gray-700"
                   aria-label="응답 재생성"
                 >
                   재생성

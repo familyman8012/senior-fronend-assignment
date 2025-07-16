@@ -155,23 +155,23 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
       {/* Sidebar */}
       <div
         className={clsx(
-          'fixed lg:relative inset-y-0 left-0 z-50 w-64 bg-gray-900 transform transition-transform duration-300 ease-in-out flex flex-col',
+          'fixed lg:relative inset-y-0 left-0 z-50 w-64 bg-gray-50 transform transition-transform duration-300 ease-in-out flex flex-col',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         {/* Logo and New Chat */}
-        <div className="p-4 border-b border-gray-700">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded border border-gray-600 flex items-center justify-center text-xs text-gray-400">
+              <div className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-xs text-gray-500">
                 svg영역
               </div>
-              <span className="text-white font-semibold">채팅</span>
+              <span className="text-gray-900 font-medium">채팅</span>
             </div>
             {/* Mobile close button */}
             <button
               onClick={onClose}
-              className="lg:hidden p-1 hover:bg-gray-800 rounded text-gray-400"
+              className="lg:hidden p-1 hover:bg-gray-200 rounded text-gray-600"
               aria-label="닫기"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,23 +182,23 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
 
           <button
             onClick={saveCurrentSession}
-            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition-colors"
+            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-700 transition-colors"
           >
-            <div className="w-5 h-5 rounded border border-gray-600 flex items-center justify-center text-xs">
+            <div className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center text-xs">
               svg영역
             </div>
-            <span className="text-sm">New chat</span>
+            <span className="text-sm font-medium">New chat</span>
           </button>
         </div>
 
         {/* Search */}
-        <div className="p-4">
+        <div className="px-4 pb-4">
           <input
             type="text"
-            placeholder="채팅 검색"
+            placeholder="대화 검색"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-800 text-white placeholder-gray-400 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-white text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
@@ -212,17 +212,17 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
                 <div
                   key={session.id}
                   className={clsx(
-                    'group relative rounded-lg transition-colors cursor-pointer',
+                    'group relative rounded-lg transition-colors cursor-pointer px-3 py-2',
                     currentChatId === session.id
-                      ? 'bg-gray-800'
+                      ? 'bg-gray-200'
                       : selectedSessionId === session.id
-                      ? 'bg-gray-800'
-                      : 'hover:bg-gray-800'
+                      ? 'bg-gray-200'
+                      : 'hover:bg-gray-100'
                   )}
                   onClick={() => loadSession(session.id)}
                 >
-                  <div className="px-3 py-2">
-                    <h3 className="text-sm text-gray-200 truncate pr-8">{session.title}</h3>
+                  <div>
+                    <h3 className="text-sm text-gray-900 truncate pr-8">{session.title}</h3>
                     <p className="text-xs text-gray-500 mt-1">
                       {new Date(session.updatedAt).toLocaleDateString()}
                     </p>
@@ -235,7 +235,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
                         e.stopPropagation();
                         exportSession(session, 'json');
                       }}
-                      className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white"
+                      className="p-1 hover:bg-gray-300 rounded text-gray-600 hover:text-gray-900"
                       aria-label="JSON으로 내보내기"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,7 +248,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
                         e.stopPropagation();
                         exportSession(session, 'markdown');
                       }}
-                      className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white"
+                      className="p-1 hover:bg-gray-300 rounded text-gray-600 hover:text-gray-900"
                       aria-label="Markdown으로 내보내기"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,7 +261,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
                         e.stopPropagation();
                         deleteSession(session.id);
                       }}
-                      className="p-1 hover:bg-gray-700 rounded text-red-400 hover:text-red-300"
+                      className="p-1 hover:bg-red-100 rounded text-red-600 hover:text-red-700"
                       aria-label="삭제"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

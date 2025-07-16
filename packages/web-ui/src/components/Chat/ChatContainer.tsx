@@ -55,9 +55,9 @@ export default function ChatContainer() {
     <div className="flex flex-col h-full max-w-5xl mx-auto">
       <div className="flex-1 overflow-y-auto px-4 py-6">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <svg
-              className="w-16 h-16 mb-4 text-gray-600"
+              className="w-16 h-16 mb-4 text-gray-300"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -69,8 +69,8 @@ export default function ChatContainer() {
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-            <h3 className="text-lg font-medium mb-2 text-gray-200">채팅을 시작해보세요</h3>
-            <p className="text-sm text-center max-w-md text-gray-400">
+            <h3 className="text-lg font-medium mb-2">채팅을 시작해보세요</h3>
+            <p className="text-sm text-center max-w-md">
               메시지에 "markdown", "html", "json" 키워드를 포함하면
               <br />
               해당 형식으로 응답을 받을 수 있습니다.
@@ -94,7 +94,7 @@ export default function ChatContainer() {
         )}
       </div>
 
-      <div className="border-t border-gray-700 bg-gray-800 px-4 py-4">
+      <div className="border-t border-gray-200 bg-white px-4 py-4">
         {!isOnline && (
           <div className="flex items-center justify-center mb-2 text-red-600">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,7 +108,7 @@ export default function ChatContainer() {
         {currentStreamingId && (
           <div className="flex items-center justify-center mb-2">
             <LoadingIndicator />
-            <span className="ml-2 text-sm text-gray-400">
+            <span className="ml-2 text-sm text-gray-500">
               응답 생성 중... (ESC로 취소)
             </span>
           </div>
