@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { MessageList } from '@/components/Message/MessageList';
 import { MessageInput } from '@/components/Message/MessageInput';
@@ -8,16 +8,13 @@ import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 export default function ChatContainer() {
-  const scrollRef = useRef<HTMLDivElement>(null);
   const { messages, error, currentStreamingId } = useChatStore();
   const { sendMessage, cancelStream, regenerateMessage, editAndResendMessage, isStreaming } = useChat();
   const { isOnline } = useNetworkStatus();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
   const handleSendMessage = useCallback(async (content: string) => {
@@ -52,10 +49,10 @@ export default function ChatContainer() {
   }, [handleKeyDown]);
 
   return (
-    <div className="flex flex-col h-full max-w-5xl mx-auto">
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+    <div className="flex flex-col min-h-full max-w-5xl mx-auto">
+      <div className="flex-1 px-4 py-6">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-14rem)] text-gray-500">
             <svg
               className="w-16 h-16 mb-4 text-gray-300"
               fill="none"
@@ -77,14 +74,11 @@ export default function ChatContainer() {
             </p>
           </div>
         ) : (
-          <>
-            <MessageList 
-              messages={messages} 
-              onRegenerate={regenerateMessage}
-              onEditAndResend={editAndResendMessage}
-            />
-            <div ref={scrollRef} />
-          </>
+          <MessageList 
+            messages={messages} 
+            onRegenerate={regenerateMessage}
+            onEditAndResend={editAndResendMessage}
+          />
         )}
         
         {error && (
@@ -94,7 +88,7 @@ export default function ChatContainer() {
         )}
       </div>
 
-      <div className="border-t border-gray-200 bg-white px-4 py-4">
+      <div className="sticky bottom-0 border-t border-gray-200 bg-white px-4 py-4">
         {!isOnline && (
           <div className="flex items-center justify-center mb-2 text-red-600">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

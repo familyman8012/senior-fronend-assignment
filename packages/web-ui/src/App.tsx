@@ -14,7 +14,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
-        <div className="h-full flex bg-white">
+        <div className="min-h-screen flex bg-white">
           <SkipNavigation />
           
           {/* Desktop Sidebar */}
@@ -30,7 +30,7 @@ function App() {
           {/* Main Content */}
           <div className="flex-1 flex flex-col">
             {/* Header */}
-            <header className="bg-white border-b border-gray-200">
+            <header className="sticky top-0 bg-white z-10">
               <div className="px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14">
                   <div className="flex items-center">
@@ -44,7 +44,7 @@ function App() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                       </svg>
                     </button>
-                    <h1 className="ml-4 lg:ml-0 text-lg font-medium text-gray-700">nextchapter</h1>
+                    <h1 className="ml-4 lg:ml-0 text-lg font-medium text-gray-700">WorkAI <span className="text-gray-400 text-sm">0.1</span></h1>
                   </div>
                   <div className="flex items-center space-x-4">
                     <button
@@ -61,7 +61,7 @@ function App() {
             </header>
 
             {/* Chat Container */}
-            <main id="main-content" className="flex-1 overflow-hidden">
+            <main id="main-content" className="flex-1">
               <ChatContainer />
               <OfflineIndicator />
             </main>

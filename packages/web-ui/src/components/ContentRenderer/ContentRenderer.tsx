@@ -11,14 +11,19 @@ const contentRenderers = {
 interface ContentRendererProps {
   content: string;
   contentType: ContentType;
+  isStreaming?: boolean;
 }
 
-export const ContentRenderer = memo(({ content, contentType }: ContentRendererProps) => {
+export const ContentRenderer = memo(({ content, contentType, isStreaming }: ContentRendererProps) => {
   const Renderer = contentRenderers[contentType] || contentRenderers.text;
+  
+  const needsBackground = contentType === 'markdown' || contentType === 'html';
   
   return (
     <Suspense fallback={<div className="animate-pulse text-gray-400">Loading...</div>}>
-      <Renderer content={content} />
+      <div className={needsBackground ? 'bg-white/50 rounded-lg p-4 -mx-2' : ''}>
+        <Renderer content={content} isStreaming={isStreaming} />
+      </div>
     </Suspense>
   );
 });

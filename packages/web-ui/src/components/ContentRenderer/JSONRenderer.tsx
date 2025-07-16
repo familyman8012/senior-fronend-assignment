@@ -9,6 +9,7 @@ const SyntaxHighlighter = lazy(() =>
 
 interface JSONRendererProps {
   content: string;
+  isStreaming?: boolean;
 }
 
 interface JSONTreeNodeProps {
@@ -134,7 +135,7 @@ const JSONTreeNode = memo(({ data, keyPath }: JSONTreeNodeProps) => {
 
 JSONTreeNode.displayName = 'JSONTreeNode';
 
-export const JSONRenderer = memo(({ content }: JSONRendererProps) => {
+export const JSONRenderer = memo(({ content, isStreaming = false }: JSONRendererProps) => {
   const [viewMode, setViewMode] = useState<'tree' | 'raw'>('tree');
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
   // SyntaxHighlighter style 로딩 개선
@@ -190,12 +191,14 @@ export const JSONRenderer = memo(({ content }: JSONRendererProps) => {
   if (error) {
     return (
       <div className="json-content">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm text-red-600">JSON 파싱 오류</span>
-          <span className="text-xs text-gray-500">({error})</span>
-        </div>
-        <pre className="bg-red-50 border border-red-200 p-3 rounded overflow-x-auto">
-          <code className="text-sm text-red-800">{content}</code>
+        {!isStreaming && (
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm text-red-600">JSON 파싱 오류</span>
+            <span className="text-xs text-gray-500">({error})</span>
+          </div>
+        )}
+        <pre className="bg-black p-3 rounded overflow-x-auto">
+          <code className="text-sm text-green-600 font-bold">{content}</code>
         </pre>
       </div>
     );

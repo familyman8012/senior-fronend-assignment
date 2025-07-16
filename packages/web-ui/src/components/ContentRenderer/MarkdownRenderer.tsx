@@ -25,15 +25,20 @@ const markdownComponents: Components = {
           language={match[1]}
           PreTag="pre"
           className="rounded-md"
+          customStyle={{
+            fontSize: '0.875rem',
+            lineHeight: '1.5',
+            padding: '1rem'
+          }}
           {...props}
         >
-          {!!children ? String(children).replace(/\n$/, '') : ""}
+          {children !== undefined ? String(children).replace(/\n$/, '') : ""}
         </SyntaxHighlighter>
       );
     }
     
     return (
-      <code className="bg-gray-200 px-1 py-0.5 rounded text-sm" {...props}>
+      <code className="bg-gray-200 px-1 py-0.5 rounded text-base" {...props}>
         {children}
       </code>
     );
@@ -53,7 +58,7 @@ const markdownComponents: Components = {
   },
   th({ children }) {
     return (
-      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-white">
         {children}
       </th>
     );
@@ -111,7 +116,7 @@ const markdownComponents: Components = {
 
 export const MarkdownRenderer = memo(({ content }: MarkdownRendererProps) => {
   return (
-    <div className="markdown-content prose prose-sm max-w-none">
+    <div className="markdown-content prose prose-sm max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={markdownComponents}

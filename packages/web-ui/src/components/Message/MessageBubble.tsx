@@ -100,6 +100,7 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
               <ContentRenderer
                 content={message.content}
                 contentType={isUser ? 'text' : message.contentType || 'text'}
+                isStreaming={isStreaming}
               />
               {isStreaming && <span className="inline-block w-2 h-4 bg-gray-400 animate-typing" />}
             </>

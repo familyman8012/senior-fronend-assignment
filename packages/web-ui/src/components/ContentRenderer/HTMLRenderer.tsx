@@ -25,7 +25,7 @@ export const HTMLRenderer = memo(({ content }: HTMLRendererProps) => {
 
   return (
     <div 
-      className="html-content prose prose-sm max-w-none"
+      className="html-content prose prose-sm max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2"
       dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
     />
   );
