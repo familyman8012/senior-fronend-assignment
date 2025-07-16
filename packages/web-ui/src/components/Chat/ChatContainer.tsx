@@ -24,14 +24,13 @@ export default function ChatContainer() {
   const handleRetry = useCallback(() => {
     // Check if last message is from user (failed send scenario)
     const lastMessage = messages[messages.length - 1];
-    const lastAssistantMessage = [...messages].reverse().find(msg => msg.role === 'assistant');
     
-    if (lastMessage?.role === 'user' && !lastAssistantMessage) {
-      // Resend the last user message
-      sendMessage(lastMessage.content);
-    } else if (lastAssistantMessage) {
+    if (lastMessage?.role === 'user') {
+      // Resend the last user message with retry flag to avoid duplicate
+      sendMessage(lastMessage.content, true);
+    } else if (lastMessage?.role === 'assistant') {
       // Regenerate the last assistant message
-      regenerateMessage(lastAssistantMessage.id);
+      regenerateMessage(lastMessage.id);
     }
   }, [messages, regenerateMessage, sendMessage]);
 

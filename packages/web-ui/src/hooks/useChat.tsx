@@ -37,7 +37,7 @@ export function useChat() {
   // Unified message handler for send, regenerate, and editAndResend
   const handleMessage = useCallback(async (
     type: 'send' | 'regenerate' | 'editAndResend',
-    params: { content?: string; messageId?: string; newContent?: string }
+    params: { content?: string; messageId?: string; newContent?: string; isRetry?: boolean }
   ) => {
     if (!isOnline) {
       // 오프라인 상태에서는 아무 작업도 수행하지 않고, OfflineIndicator가 표시되도록 합니다.
@@ -52,14 +52,17 @@ export function useChat() {
         createNewChat();
       }
       
-      const userMessage = {
-        role: 'user' as const,
-        content: params.content!,
-      };
-      addMessage(userMessage);
-      
-      // Auto-save after adding user message
-      setTimeout(() => saveCurrentChat(), 100);
+      // Only add user message if not retrying (retry reuses existing message)
+      if (!params.isRetry) {
+        const userMessage = {
+          role: 'user' as const,
+          content: params.content!,
+        };
+        addMessage(userMessage);
+        
+        // Auto-save after adding user message
+        setTimeout(() => saveCurrentChat(), 100);
+      }
     } else if (type === 'regenerate') {
       const messageIndex = messages.findIndex(msg => msg.id === params.messageId);
       if (messageIndex === -1 || messages[messageIndex].role !== 'assistant') {
@@ -109,8 +112,8 @@ export function useChat() {
   }, [addMessage, isOnline, messages, setError, createAssistantMessage, messageMutation]);
 
   // Convenience methods that use the unified handler
-  const sendMessage = useCallback((content: string) => {
-    return handleMessage('send', { content });
+  const sendMessage = useCallback((content: string, isRetry = false) => {
+    return handleMessage('send', { content, isRetry });
   }, [handleMessage]);
 
   const regenerateMessage = useCallback((messageId: string) => {
