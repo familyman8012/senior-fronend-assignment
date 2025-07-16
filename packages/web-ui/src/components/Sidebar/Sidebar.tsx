@@ -134,7 +134,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
   );
 
   // Load sessions from localStorage on mount and sync with changes
-  useState(() => {
+  useEffect(() => {
     const loadSessions = () => {
       const stored = localStorage.getItem('chatSessions');
       if (stored) {
@@ -168,7 +168,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  });
+  }, []);
 
   return (
     <>

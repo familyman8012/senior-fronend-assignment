@@ -1,7 +1,5 @@
-const CACHE_NAME = 'chat-app-v1';
+const CACHE_NAME = 'chat-app-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
   '/manifest.json'
 ];
 
@@ -23,6 +21,19 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Use network-first strategy for HTML documents
+  if (event.request.destination === 'document' || event.request.url.endsWith('.html') || event.request.url.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => {
+          // Offline fallback - return offline.html if available
+          return caches.match('/offline.html');
+        })
+    );
+    return;
+  }
+
+  // Use cache-first strategy for other resources (JS, CSS, images, etc.)
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -53,17 +64,6 @@ self.addEventListener('fetch', (event) => {
 
           return response;
         });
-      })
-      .catch(() => {
-        // Offline fallback for navigation requests
-        if (event.request.destination === 'document') {
-          return caches.match('/').then((response) => {
-            if (response) {
-              return response;
-            }
-            return caches.match('/offline.html');
-          });
-        }
       })
   );
 });

@@ -25,7 +25,20 @@
     <title>AI Chat Interface</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Loading state while React initializes -->
+      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f9fafb;">
+        <div style="text-align: center;">
+          <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+          <p style="margin-top: 16px; color: #6b7280; font-family: system-ui, -apple-system, sans-serif;">로딩 중...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

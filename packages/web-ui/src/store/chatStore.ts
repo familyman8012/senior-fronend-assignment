@@ -160,6 +160,13 @@ export const useChatStore = create<ChatStore>()(
           messages: state.messages.filter((msg) => !msg.isStreaming),
           currentChatId: state.currentChatId,
         }),
+        onRehydrateStorage: () => (state) => {
+          // Clear any lingering streaming messages after hydration
+          if (state) {
+            state.streamingId = null;
+            state.abortController = null;
+          }
+        },
       }
     )
   )
