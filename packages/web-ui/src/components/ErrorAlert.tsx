@@ -8,11 +8,11 @@ interface ErrorAlertProps {
 
 export const ErrorAlert = memo(({ message, onRetry, onDismiss }: ErrorAlertProps) => {
   return (
-    <div className="bg-red-50 border border-red-200 rounded-lg p-4" role="alert">
+    <div className="bg-red-900/20 border border-red-800 rounded-lg p-4" role="alert">
       <div className="flex items-start">
         <div className="flex-shrink-0">
           <svg
-            className="h-5 w-5 text-red-400"
+            className="h-5 w-5 text-red-500"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -24,13 +24,13 @@ export const ErrorAlert = memo(({ message, onRetry, onDismiss }: ErrorAlertProps
           </svg>
         </div>
         <div className="ml-3 flex-1">
-          <h3 className="text-sm font-medium text-red-800">오류가 발생했습니다</h3>
-          <p className="mt-1 text-sm text-red-700">{message}</p>
+          <h3 className="text-sm font-medium text-red-400">오류가 발생했습니다</h3>
+          <p className="mt-1 text-sm text-red-300">{message}</p>
           <div className="mt-3 flex gap-2">
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="text-sm bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200 transition-colors"
+                className="text-sm bg-red-800 text-red-200 px-3 py-1 rounded hover:bg-red-700 transition-colors"
               >
                 다시 시도
               </button>
@@ -38,7 +38,7 @@ export const ErrorAlert = memo(({ message, onRetry, onDismiss }: ErrorAlertProps
             {onDismiss && (
               <button
                 onClick={onDismiss}
-                className="text-sm text-red-700 hover:text-red-800"
+                className="text-sm text-red-400 hover:text-red-300"
               >
                 닫기
               </button>

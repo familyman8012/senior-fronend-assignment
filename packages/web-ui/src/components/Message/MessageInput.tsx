@@ -56,16 +56,17 @@ export function MessageInput({ onSendMessage, isLoading, disabled }: MessageInpu
           placeholder="메시지를 입력하세요... (Shift+Enter로 줄바꿈)"
           disabled={disabled}
           className={clsx(
-            'w-full px-4 py-2 border border-gray-300 rounded-lg resize-none',
+            'w-full px-4 py-2 border border-gray-600 rounded-lg resize-none',
+            'bg-gray-700 text-white placeholder-gray-400',
             'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-            'disabled:bg-gray-100 disabled:cursor-not-allowed',
+            'disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-500',
             'min-h-[42px] max-h-[120px]'
           )}
           rows={1}
           aria-label="메시지 입력"
         />
         
-        <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+        <div className="absolute bottom-2 right-2 text-xs text-gray-500">
           {message.length > 0 && `${message.length} 자`}
         </div>
       </div>
@@ -77,7 +78,7 @@ export function MessageInput({ onSendMessage, isLoading, disabled }: MessageInpu
           'px-4 py-2 rounded-lg font-medium transition-colors',
           'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
           !message.trim() || disabled || isLoading
-            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
             : 'bg-blue-600 text-white hover:bg-blue-700'
         )}
         aria-label="메시지 전송"
@@ -103,19 +104,9 @@ export function MessageInput({ onSendMessage, isLoading, disabled }: MessageInpu
             />
           </svg>
         ) : (
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-            />
-          </svg>
+          <div className="w-5 h-5 rounded border border-gray-500 flex items-center justify-center text-xs text-gray-400">
+            svg영역
+          </div>
         )}
       </button>
     </form>

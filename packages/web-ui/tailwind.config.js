@@ -7,9 +7,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        'chat-user': '#e3f2fd',
-        'chat-ai': '#f5f5f5',
-        'chat-border': '#e0e0e0',
+        'chat-user': '#1e40af',
+        'chat-ai': '#374151',
+        'chat-border': '#4b5563',
       },
       animation: {
         'typing': 'typing 1.5s steps(3) infinite',
