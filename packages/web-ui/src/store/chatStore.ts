@@ -144,7 +144,7 @@ export const useChatStore = create<ChatStore>()(
           const existingChats = JSON.parse(localStorage.getItem('chatSessions') || '[]');
           
           // Update if exists, otherwise add new
-          const chatIndex = existingChats.findIndex((chat: any) => chat.id === state.currentChatId);
+          const chatIndex = existingChats.findIndex((chat:  { id: string }) => chat.id === state.currentChatId);
           if (chatIndex !== -1) {
             existingChats[chatIndex] = { ...chatData, createdAt: existingChats[chatIndex].createdAt };
           } else {
