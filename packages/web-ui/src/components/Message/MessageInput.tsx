@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, KeyboardEvent } from 'react';
+import { useState, useCallback, useRef, KeyboardEvent, memo } from 'react';
 import clsx from 'clsx';
 
 interface MessageInputProps {
@@ -7,7 +7,7 @@ interface MessageInputProps {
   disabled?: boolean;
 }
 
-export function MessageInput({ onSendMessage, isLoading, disabled }: MessageInputProps) {
+export const MessageInput = memo(function MessageInput({ onSendMessage, isLoading, disabled }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -125,4 +125,4 @@ export function MessageInput({ onSendMessage, isLoading, disabled }: MessageInpu
       </div>
     </form>
   );
-}
+});

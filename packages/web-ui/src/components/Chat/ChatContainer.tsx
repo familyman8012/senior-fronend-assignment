@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, memo } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { MessageList } from '@/components/Message/MessageList';
 import { MessageInput } from '@/components/Message/MessageInput';
@@ -7,7 +7,7 @@ import { ErrorAlert } from '@/components/ErrorAlert';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
-export default function ChatContainer() {
+const ChatContainer = memo(function ChatContainer() {
   const { messages, error, currentStreamingId } = useChatStore();
   const { sendMessage, cancelStream, regenerateMessage, editAndResendMessage, isStreaming } = useChat();
   const { isOnline } = useNetworkStatus();
@@ -39,12 +39,12 @@ export default function ChatContainer() {
     // Cancel streaming with Escape key only if assistant message has content
     if (e.key === 'Escape' && currentStreamingId) {
       // Check if the streaming message exists and has content
-      const streamingMessage = messages.find(msg => msg.id === currentStreamingId);
+      const streamingMessage = useChatStore.getState().messages.find(msg => msg.id === currentStreamingId);
       if (streamingMessage && streamingMessage.role === 'assistant' && streamingMessage.content.trim().length > 0) {
         cancelStream();
       }
     }
-  }, [currentStreamingId, cancelStream, messages]);
+  }, [currentStreamingId, cancelStream]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -119,4 +119,6 @@ export default function ChatContainer() {
       </div>
     </div>
   );
-}
+});
+
+export default ChatContainer;

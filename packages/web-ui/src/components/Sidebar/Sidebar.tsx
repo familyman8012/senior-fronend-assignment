@@ -1,4 +1,4 @@
-import { useState, useCallback, memo, useEffect } from 'react';
+import { useState, useCallback, memo, useEffect, useMemo } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { Message } from '@/types/chat';
 import clsx from 'clsx';
@@ -126,12 +126,13 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
   }, []);
 
   // Filter sessions by search query
-  const filteredSessions = sessions.filter(session => 
-    session.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    session.messages.some(msg => 
-      msg.content.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
+  const filteredSessions = useMemo(() => 
+    sessions.filter(session => 
+      session.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      session.messages.some(msg => 
+        msg.content.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    ), [sessions, searchQuery]);
 
   // Load sessions from localStorage on mount and sync with changes
   useEffect(() => {

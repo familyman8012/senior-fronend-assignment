@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 interface TextRendererProps {
   content: string;
@@ -6,7 +6,7 @@ interface TextRendererProps {
 
 export const TextRenderer = memo(({ content }: TextRendererProps) => {
   // Convert URLs to clickable links
-  const renderTextWithLinks = (text: string) => {
+  const renderTextWithLinks = useMemo(() => (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
     
@@ -26,10 +26,10 @@ export const TextRenderer = memo(({ content }: TextRendererProps) => {
       }
       return part;
     });
-  };
+  }, []);
 
   // Preserve line breaks and whitespace
-  const lines = content.split('\n');
+  const lines = useMemo(() => content.split('\n'), [content]);
 
   return (
     <div className="text-content">
