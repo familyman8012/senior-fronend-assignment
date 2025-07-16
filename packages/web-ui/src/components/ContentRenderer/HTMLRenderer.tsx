@@ -3,13 +3,32 @@ import DOMPurify from 'dompurify';
 
 interface HTMLRendererProps {
   content: string;
+  isStreaming?: boolean;
 }
 
-export const HTMLRenderer = memo(({ content }: HTMLRendererProps) => {
+export const HTMLRenderer = memo(({ content, isStreaming = false }: HTMLRendererProps) => {
+  // Process content to handle incomplete tags during streaming
+  const processedContent = useMemo(() => {
+    if (!isStreaming) {
+      return content;
+    }
+
+    // Find the last incomplete tag
+    const lastOpenTagIndex = content.lastIndexOf('<');
+    const lastCloseTagIndex = content.lastIndexOf('>');
+
+    // If there's an unclosed tag, trim content before it
+    if (lastOpenTagIndex > lastCloseTagIndex) {
+      return content.substring(0, lastOpenTagIndex);
+    }
+
+    return content;
+  }, [content, isStreaming]);
+
   // Sanitize HTML to prevent XSS attacks
   const sanitizedHTML = useMemo(() => {
     // Use DOMPurify with default settings
-    const clean = DOMPurify.sanitize(content);
+    const clean = DOMPurify.sanitize(processedContent);
 
     // Add target="_blank" and rel="noopener noreferrer" to all links
     const parser = new DOMParser();
@@ -21,7 +40,7 @@ export const HTMLRenderer = memo(({ content }: HTMLRendererProps) => {
     });
 
     return doc.body.innerHTML;
-  }, [content]);
+  }, [processedContent]);
 
   return (
     <div 

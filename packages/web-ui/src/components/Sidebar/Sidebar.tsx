@@ -84,7 +84,14 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
       localStorage.setItem('chatSessions', JSON.stringify(updated));
       return updated;
     });
-  }, []);
+    
+    // If deleting the current session, redirect to new chat
+    if (currentChatId === sessionId) {
+      clearMessages();
+      setCurrentChatId(null);
+      setSelectedSessionId(null);
+    }
+  }, [currentChatId, clearMessages, setCurrentChatId]);
 
   // Export session
   const exportSession = useCallback((session: ChatSession, format: 'json' | 'markdown') => {

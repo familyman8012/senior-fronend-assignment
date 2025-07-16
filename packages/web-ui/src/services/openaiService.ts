@@ -7,7 +7,7 @@ import { createAppError, ErrorType } from '@/utils/errorHandling';
 // In development, we expect a mock server to be running on localhost:3001
 const openai = new OpenAI({
   apiKey:  'test-key',
-  baseURL: 'http://localhost:3001/v1',
+  baseURL: 'http://localhost:30012/v1',
   dangerouslyAllowBrowser: true,
 });
 
@@ -78,13 +78,17 @@ export class OpenAIService {
 
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message.includes('429')) {
+        const errorMessage = error.message.toLowerCase();
+        
+        if (errorMessage.includes('429')) {
           onError?.(createAppError('요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.', ErrorType.RATE_LIMIT, true, 429));
-        } else if (error.message.includes('401')) {
+        } else if (errorMessage.includes('401')) {
           onError?.(createAppError('인증에 실패했습니다. API 키를 확인해주세요.', ErrorType.AUTHENTICATION, false, 401));
-        } else if (error.message.includes('abort')) {
+        } else if (errorMessage.includes('abort')) {
           // Don't call onError for user-initiated cancellations
           return;
+        } else if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('connection') || errorMessage.includes('econnrefused')) {
+          onError?.(createAppError('네트워크 연결을 확인해주세요.', ErrorType.NETWORK, true));
         } else {
           onError?.(createAppError(`오류가 발생했습니다: ${error.message}`, ErrorType.UNKNOWN, true));
         }

@@ -37,11 +37,15 @@ export default function ChatContainer() {
 
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // Cancel streaming with Escape key
+    // Cancel streaming with Escape key only if assistant message has content
     if (e.key === 'Escape' && currentStreamingId) {
-      cancelStream();
+      // Check if the streaming message exists and has content
+      const streamingMessage = messages.find(msg => msg.id === currentStreamingId);
+      if (streamingMessage && streamingMessage.role === 'assistant' && streamingMessage.content.trim().length > 0) {
+        cancelStream();
+      }
     }
-  }, [currentStreamingId, cancelStream]);
+  }, [currentStreamingId, cancelStream, messages]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -103,7 +107,8 @@ export default function ChatContainer() {
           <div className="flex items-center justify-center mb-2">
             <LoadingIndicator />
             <span className="ml-2 text-sm text-gray-500">
-              응답 생성 중... (ESC로 취소)
+              응답 생성 중...
+              {messages.find(msg => msg.id === currentStreamingId && msg.role === 'assistant' && msg.content.trim().length > 0) && ' (ESC로 취소)'}
             </span>
           </div>
         )}

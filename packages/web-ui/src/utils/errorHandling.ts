@@ -30,7 +30,7 @@ export function parseError(error: unknown): AppError {
     const message = error.message.toLowerCase();
     
     // Network errors
-    if (message.includes('network') || message.includes('fetch')) {
+    if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
       return createAppError(
         '네트워크 연결을 확인해주세요.',
         ErrorType.NETWORK,
