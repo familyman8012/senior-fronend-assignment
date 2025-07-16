@@ -1,7 +1,8 @@
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback, useEffect, useRef } from 'react';
 import { Message } from '@/types/chat';
 import { ContentRenderer } from '@/components/ContentRenderer/ContentRenderer';
 import clsx from 'clsx';
+import { useChatStore } from '@/store/chatStore';
 
 interface MessageBubbleProps {
   message: Message;
@@ -12,9 +13,20 @@ interface MessageBubbleProps {
 export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: MessageBubbleProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
+  const messagesLength = useChatStore((state) => state.messages.length);
+  const prevMessagesLengthRef = useRef(messagesLength);
 
   const isUser = message.role === 'user';
   const isStreaming = message.isStreaming;
+
+  // Cancel edit mode when a new message is added
+  useEffect(() => {
+    if (messagesLength > prevMessagesLengthRef.current && isEditing) {
+      setIsEditing(false);
+      setEditContent(message.content);
+    }
+    prevMessagesLengthRef.current = messagesLength;
+  }, [messagesLength, isEditing, message.content]);
 
   const handleEdit = useCallback(() => {
     if (isUser && !isStreaming) {
@@ -81,17 +93,18 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
                 placeholder='메시지를 입력하세요.'
               />
               <div className="flex gap-2">
-                <button
-                  onClick={handleSaveEdit}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  저장
-                </button>
+                
                 <button
                   onClick={handleCancelEdit}
                   className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
                 >
                   취소
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  보내기
                 </button>
               </div>
             </div>

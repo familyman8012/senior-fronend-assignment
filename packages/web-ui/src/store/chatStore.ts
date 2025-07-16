@@ -163,8 +163,13 @@ export const useChatStore = create<ChatStore>()(
         onRehydrateStorage: () => (state) => {
           // Clear any lingering streaming messages after hydration
           if (state) {
-            state.streamingId = null;
+            state.currentStreamingId = null;
             state.abortController = null;
+            
+            // Don't auto-load previous chat on fresh page load
+            // Always start with a new chat
+            state.messages = [];
+            state.currentChatId = null;
           }
         },
       }
