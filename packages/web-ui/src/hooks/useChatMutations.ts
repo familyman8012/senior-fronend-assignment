@@ -4,6 +4,7 @@ import { OpenAIService } from '@/services/openaiService';
 import { useChatStore } from '@/store/chatStore';
 import { ContentType } from '@/types/chat';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { errorHandler } from '@/utils/errorHandling';
 
 type MessageMutationType = 'send' | 'regenerate' | 'editAndResend';
 
@@ -43,40 +44,42 @@ export function useChatMutations() {
       setAbortController(controller);
       setStreamingId(assistantMessageId);
 
-      const currentMessages = useChatStore.getState().messages;
-      const apiMessages: ChatCompletionMessageParam[] = (
-        type === 'send'
-          ? currentMessages.slice(0, -1)
-          : currentMessages.filter(msg => msg.id !== assistantMessageId)
-      ).map(msg => ({
-        role: msg.role,
-        content: msg.content,
-      }));
+      try {
+        const currentMessages = useChatStore.getState().messages;
+        const apiMessages: ChatCompletionMessageParam[] = (
+          type === 'send'
+            ? currentMessages.slice(0, -1)
+            : currentMessages.filter(msg => msg.id !== assistantMessageId)
+        ).map(msg => ({
+          role: msg.role,
+          content: msg.content,
+        }));
 
-      await OpenAIService.createChatStream({
-        messages: apiMessages,
-        signal: controller.signal,
-        onChunk: (chunk, contentType) => {
-          appendToStreamingMessage(assistantMessageId, chunk);
-          
-          // Update contentType when first detected
-          if (contentType) {
-            const message = useChatStore.getState().messages.find(m => m.id === assistantMessageId);
-            if (message && message.contentType === 'text') {
-              updateMessage(assistantMessageId, { contentType: contentType as ContentType });
+        await OpenAIService.createChatStream({
+          messages: apiMessages,
+          signal: controller.signal,
+          onChunk: (chunk, contentType) => {
+            appendToStreamingMessage(assistantMessageId, chunk);
+            
+            // Update contentType when first detected
+            if (contentType) {
+              const message = useChatStore.getState().messages.find(m => m.id === assistantMessageId);
+              if (message && message.contentType === 'text') {
+                updateMessage(assistantMessageId, { contentType: contentType as ContentType });
+              }
             }
-          }
-        },
-        onComplete: () => {
-          updateMessage(assistantMessageId, { isStreaming: false });
-          setStreamingId(null);
-          // Auto-save after streaming completes
-          setTimeout(() => saveCurrentChat(), 100);
-        },
-        onError: (error) => {
-          throw error;
-        },
-      });
+          },
+          onComplete: () => {
+            updateMessage(assistantMessageId, { isStreaming: false });
+            setStreamingId(null);
+            // Auto-save after streaming completes
+            setTimeout(() => saveCurrentChat(), 100);
+          },
+        });
+      } finally {
+        // Immediately clean up AbortController to prevent memory leaks
+        setAbortController(null);
+      }
     },
     onError: (error, variables) => {
       const message = useChatStore.getState().messages.find(m => m.id === variables.assistantMessageId);
@@ -86,10 +89,9 @@ export function useChatMutations() {
         updateMessage(variables.assistantMessageId, { isStreaming: false });
       }
       setStreamingId(null);
-      setAbortController(null);
-    },
-    onSettled: () => {
-      setAbortController(null);
+      
+      // Use centralized error handler
+      errorHandler.handle(error, `ChatMutation:${variables.type}`);
     },
   });
 

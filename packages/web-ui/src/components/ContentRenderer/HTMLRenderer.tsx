@@ -6,6 +6,9 @@ interface HTMLRendererProps {
   isStreaming?: boolean;
 }
 
+// Create a singleton DOMParser instance to avoid repeated instantiation
+const domParser = new DOMParser();
+
 export const HTMLRenderer = memo(({ content, isStreaming = false }: HTMLRendererProps) => {
   // Process content to handle incomplete tags during streaming
   const processedContent = useMemo(() => {
@@ -31,8 +34,7 @@ export const HTMLRenderer = memo(({ content, isStreaming = false }: HTMLRenderer
     const clean = DOMPurify.sanitize(processedContent);
 
     // Add target="_blank" and rel="noopener noreferrer" to all links
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(clean, 'text/html');
+    const doc = domParser.parseFromString(clean, 'text/html');
     const links = doc.querySelectorAll('a');
     links.forEach(link => {
       link.setAttribute('target', '_blank');

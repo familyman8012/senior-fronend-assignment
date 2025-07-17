@@ -1,3 +1,6 @@
+import { toast } from '@/store/toastStore';
+import { useChatStore } from '@/store/chatStore';
+
 export enum ErrorType {
   NETWORK = 'NETWORK',
   RATE_LIMIT = 'RATE_LIMIT',
@@ -96,3 +99,71 @@ export function shouldRetry(error: unknown): boolean {
   const appError = parseError(error);
   return appError.retryable && appError.type !== ErrorType.UNKNOWN;
 }
+
+export class ErrorHandler {
+  private static instance: ErrorHandler;
+  
+  private constructor() {}
+  
+  static getInstance(): ErrorHandler {
+    if (!ErrorHandler.instance) {
+      ErrorHandler.instance = new ErrorHandler();
+    }
+    return ErrorHandler.instance;
+  }
+  
+  handle(error: unknown, context?: string): void {
+    const appError = parseError(error);
+    
+    // Centralized logging
+    console.error(`[${context || 'Error'}]`, {
+      type: appError.type,
+      message: appError.message,
+      retryable: appError.retryable,
+      statusCode: appError.statusCode,
+      originalError: error,
+    });
+    
+    // Don't show UI for abort errors
+    if (appError.message.includes('취소')) {
+      return;
+    }
+    
+    // Error type specific handling
+    switch (appError.type) {
+      case ErrorType.RATE_LIMIT:
+        toast.warning(appError.message, 5000);
+        break;
+        
+      case ErrorType.NETWORK:
+        // Store for persistent display (in ErrorAlert)
+        useChatStore.getState().setError(appError.message);
+        break;
+        
+      case ErrorType.AUTHENTICATION:
+        toast.error(appError.message, 0); // No auto-dismiss for auth errors
+        break;
+        
+      case ErrorType.VALIDATION:
+        toast.warning(appError.message);
+        break;
+        
+      default:
+        // For unknown errors, show toast for transient errors
+        // and store for persistent display for serious errors
+        if (appError.retryable) {
+          toast.error(appError.message);
+        } else {
+          useChatStore.getState().setError(appError.message);
+        }
+    }
+  }
+  
+  // Method to clear all errors
+  clearAll(): void {
+    useChatStore.getState().setError(null);
+  }
+}
+
+// Export singleton instance
+export const errorHandler = ErrorHandler.getInstance();

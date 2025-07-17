@@ -6,6 +6,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { SkipNavigation } from './components/SkipNavigation';
+import { ToastContainer } from './components/Toast/ToastContainer';
 import { queryClient } from './lib/queryClient';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
       <ErrorBoundary>
         <div className="min-h-screen flex bg-white">
           <SkipNavigation />
+          <ToastContainer />
           
           {/* Desktop Sidebar */}
           <div className="hidden lg:block">

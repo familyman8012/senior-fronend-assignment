@@ -1,6 +1,5 @@
 import OpenAI from 'openai';
 import { ChatCompletionMessageParam, ChatCompletionChunk } from 'openai/resources/chat/completions';
-import { createAppError, ErrorType } from '@/utils/errorHandling';
 
 // Configure OpenAI client
 // In development, we expect a mock server to be running on localhost:3001
@@ -36,63 +35,38 @@ export class OpenAIService {
     onError,
     onComplete,
   }: ChatStreamOptions): Promise<void> {
- 
+    const stream = await openai.chat.completions.create({
+      model,
+      messages,
+      temperature,
+      max_tokens: maxTokens,
+      stream: true,
+    }, { signal });
+
+    let detectedContentType: string | undefined;
     
-    try {
-      const stream = await openai.chat.completions.create({
-        model,
-        messages,
-        temperature,
-        max_tokens: maxTokens,
-        stream: true,
-      }, { signal });
-
-      let detectedContentType: string | undefined;
-      
-      for await (const chunk of stream) {
-        // Check abort status first
-        if (signal?.aborted) {
-          break;  // Exit the loop instead of throwing
-        }
-
-        const content = chunk.choices[0]?.delta?.content || '';
-        const contentType = (chunk.choices[0]?.delta as DeltaWithContentType)?.contentType;
-        
-        // Store contentType when first detected
-        if (contentType && !detectedContentType) {
-          detectedContentType = contentType;
-        }
-        
-        if (content && onChunk) {
-          onChunk(content, detectedContentType);
-        }
-
-        // Check if stream is finished
-        if (chunk.choices[0]?.finish_reason === 'stop') {
-         
-          onComplete?.();
-          break;
-        }
+    for await (const chunk of stream) {
+      // Check abort status first
+      if (signal?.aborted) {
+        break;  // Exit the loop instead of throwing
       }
 
-    } catch (error) {
-      if (error instanceof Error) {
-        const errorMessage = error.message.toLowerCase();
-        
-        if (errorMessage.includes('429')) {
-          onError?.(createAppError('요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.', ErrorType.RATE_LIMIT, true, 429));
-        } else if (errorMessage.includes('401')) {
-          onError?.(createAppError('인증에 실패했습니다. API 키를 확인해주세요.', ErrorType.AUTHENTICATION, false, 401));
-        } else if (errorMessage.includes('abort')) {
-          // Don't call onError for user-initiated cancellations
-          return;
-        } else if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('connection') || errorMessage.includes('econnrefused')) {
-          onError?.(createAppError('네트워크 연결을 확인해주세요.', ErrorType.NETWORK, true));
-        } else {
-          onError?.(createAppError(`오류가 발생했습니다: ${error.message}`, ErrorType.UNKNOWN, true));
-        }
-      } else {
-        onError?.(createAppError('알 수 없는 오류가 발생했습니다.', ErrorType.UNKNOWN, true));
+      const content = chunk.choices[0]?.delta?.content || '';
+      const contentType = (chunk.choices[0]?.delta as DeltaWithContentType)?.contentType;
+      
+      // Store contentType when first detected
+      if (contentType && !detectedContentType) {
+        detectedContentType = contentType;
+      }
+      
+      if (content && onChunk) {
+        onChunk(content, detectedContentType);
+      }
+
+      // Check if stream is finished
+      if (chunk.choices[0]?.finish_reason === 'stop') {
+        onComplete?.();
+        break;
       }
     }
   }
@@ -105,31 +79,14 @@ export class OpenAIService {
       maxTokens?: number;
     }
   ): Promise<string> {
-    try {
-      const response = await openai.chat.completions.create({
-        model: options?.model || 'gpt-3.5-turbo',
-        messages,
-        temperature: options?.temperature || 0.7,
-        max_tokens: options?.maxTokens || 1000,
-        stream: false,
-      });
+    const response = await openai.chat.completions.create({
+      model: options?.model || 'gpt-3.5-turbo',
+      messages,
+      temperature: options?.temperature || 0.7,
+      max_tokens: options?.maxTokens || 1000,
+      stream: false,
+    });
 
-      return response.choices[0]?.message?.content || '';
-    } catch (error) {
-      if (error instanceof Error) {
-        const errorMessage = error.message.toLowerCase();
-        
-        if (errorMessage.includes('429')) {
-          throw createAppError('요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.', ErrorType.RATE_LIMIT, true, 429);
-        } else if (errorMessage.includes('401')) {
-          throw createAppError('인증에 실패했습니다. API 키를 확인해주세요.', ErrorType.AUTHENTICATION, false, 401);
-        } else if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('connection') || errorMessage.includes('econnrefused')) {
-          throw createAppError('네트워크 연결을 확인해주세요.', ErrorType.NETWORK, true);
-        } else {
-          throw createAppError(`채팅 생성 실패: ${error.message}`, ErrorType.UNKNOWN, true);
-        }
-      }
-      throw createAppError('채팅 생성 중 알 수 없는 오류가 발생했습니다.', ErrorType.UNKNOWN, true);
-    }
+    return response.choices[0]?.message?.content || '';
   }
 }

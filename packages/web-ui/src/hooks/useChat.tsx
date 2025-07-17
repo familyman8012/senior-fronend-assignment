@@ -3,7 +3,7 @@ import { useChatStore } from '@/store/chatStore';
 import { ContentType } from '@/types/chat';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useChatMutations } from '@/hooks/useChatMutations';
-import { parseError } from '@/utils/errorHandling';
+import { errorHandler } from '@/utils/errorHandling';
 
 export function useChat() {
   const { isOnline } = useNetworkStatus();
@@ -66,7 +66,7 @@ export function useChat() {
     } else if (type === 'regenerate') {
       const messageIndex = messages.findIndex(msg => msg.id === params.messageId);
       if (messageIndex === -1 || messages[messageIndex].role !== 'assistant') {
-        setError('재생성할 메시지를 찾을 수 없습니다.');
+        errorHandler.handle(new Error('재생성할 메시지를 찾을 수 없습니다.'), 'RegenerateMessage');
         return;
       }
       useChatStore.getState().truncateMessagesFrom(params.messageId!);
@@ -84,7 +84,7 @@ export function useChat() {
     // Create assistant message
     const assistantMessageId = createAssistantMessage(contentType);
     if (!assistantMessageId) {
-      setError('메시지 생성에 실패했습니다.');
+      errorHandler.handle(new Error('메시지 생성에 실패했습니다.'), 'CreateAssistantMessage');
       return;
     }
 
@@ -99,10 +99,6 @@ export function useChat() {
         assistantMessageId,
       },
       {
-        onError: (error) => {
-          const appError = parseError(error);
-          setError(appError.message);
-        },
         onSuccess: () => {
           // Auto-save after assistant message is complete
           setTimeout(() => saveCurrentChat(), 100);
