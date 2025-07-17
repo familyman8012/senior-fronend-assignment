@@ -7,6 +7,7 @@ const openai = new OpenAI({
   apiKey:  'test-key',
   baseURL: 'http://localhost:3001/v1',
   dangerouslyAllowBrowser: true,
+  maxRetries: 0, // OpenAI 클라이언트의 자체 재시도 비활성화
 });
 
 export interface ChatStreamOptions {

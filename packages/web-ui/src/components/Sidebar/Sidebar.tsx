@@ -137,14 +137,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
   }, []);
 
 
-  // 변경 사항과 동기화하기 위해 주기적으로 쿼리 무효화
-  useEffect(() => {
-    const interval = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: chatQueryKeys.sessions() });
-    }, 2000);
-    
-    return () => clearInterval(interval);
-  }, [queryClient]);
+  // storage 이벤트로 동기화 (이미 ChatHistory에서 처리중이므로 여기서는 제거)
 
   return (
     <>
