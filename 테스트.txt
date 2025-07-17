@@ -1,0 +1,41 @@
+단위 테스트
+
+  - ContentRenderer: 모든 콘텐츠 타입(Markdown, HTML, JSON, Text) 렌더링 테스트
+  - MessageBubble: 메시지 표시, 편집, 재생성 기능 테스트
+  - MessageInput: 입력, 전송, 문자수 표시 테스트
+  - useNetworkStatus: 네트워크 상태 감지 및 이벤트 처리 테스트
+  - useChat: 메시지 전송, 스트리밍, 에러 처리 테스트
+
+  통합 테스트
+
+  - 채팅 스트리밍: 실시간 스트리밍, 취소, 연속 메시지 처리
+  - 오프라인 모드: 오프라인 감지, 기능 제한, 히스토리 접근
+
+  E2E 테스트
+
+  - 기본 채팅: UI 로드, 메시지 전송/수신, 스크롤
+  - 콘텐츠 렌더링: 각 타입별 렌더링 검증
+  - 에러 처리: 취소, 재시도, 네트워크 에러
+  - 고급 기능: 히스토리, 검색, 내보내기, 접근성, PWA
+
+  테스트 실행 방법
+
+  # 단위 테스트 실행
+  pnpm test:unit
+
+  # 단위 테스트 watch 모드
+  pnpm test:unit:watch
+
+  # 테스트 커버리지
+  pnpm test:coverage
+
+  # E2E 테스트
+  pnpm test:e2e
+
+  # E2E 테스트 (브라우저 표시)
+  pnpm test:e2e:headed
+
+  # 모든 테스트 실행
+  pnpm test:all
+
+  테스트는 필수 구현 사항과 도전과제 모두를 포괄적으로 검증하며, 실제 사용자 시나리오를 충실히 재현합니다.

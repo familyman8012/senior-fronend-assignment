@@ -12,14 +12,27 @@ import { queryClient } from './lib/queryClient';
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  // 모바일에서 Ctrl/Cmd+K로 사이드바 열기
+  // 키보드 단축키 처리
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd+K: 모바일에서 사이드바 열기
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         const isDesktop = window.innerWidth >= 1024; // lg breakpoint
         if (!isDesktop && !isSidebarOpen) {
           e.preventDefault();
           setIsSidebarOpen(true);
+        }
+      }
+      
+      // Shift+ESC: 메시지 입력 필드에 포커스
+      if (e.shiftKey && e.key === 'Escape') {
+        e.preventDefault();
+        const messageInput = document.querySelector('textarea[placeholder*="메시지를 입력하세요"]') as HTMLTextAreaElement;
+        if (messageInput) {
+          messageInput.focus();
+          // 커서를 텍스트 끝으로 이동
+          const length = messageInput.value.length;
+          messageInput.setSelectionRange(length, length);
         }
       }
     };
