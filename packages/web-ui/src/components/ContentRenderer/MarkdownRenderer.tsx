@@ -1,16 +1,24 @@
-import { memo } from 'react';
+import { memo, lazy, Suspense, useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { Components } from 'react-markdown';
+
+// 동적 import를 위한 lazy loading
+const SyntaxHighlighter = lazy(() => 
+  import('react-syntax-highlighter').then(module => ({
+    default: module.Prism
+  }))
+);
 
 interface MarkdownRendererProps {
   content: string;
 }
 
+// 스타일을 위한 타입 정의
+type SyntaxStyle = Record<string, React.CSSProperties>;
+
 // ReactMarkdown의 컴포넌트들을 외부 상수로 분리하여 재사용성 향상
-const markdownComponents: Components = {
+const createMarkdownComponents = (syntaxStyle: SyntaxStyle | null): Components => ({
   code({ inline, className, children, ...props }: {
     inline?: boolean;
     className?: string;
@@ -20,20 +28,22 @@ const markdownComponents: Components = {
     
     if (!inline && match) {
       return (
-        <SyntaxHighlighter
-          style={oneDark as { [key: string]: React.CSSProperties }}
-          language={match[1]}
-          PreTag="pre"
-          className="rounded-md"
-          customStyle={{
-            fontSize: '0.875rem',
-            lineHeight: '1.5',
-            padding: '1rem'
-          }}
-          {...props}
-        >
-          {children !== undefined ? String(children).replace(/\n$/, '') : ""}
-        </SyntaxHighlighter>
+        <Suspense fallback={<pre className="bg-gray-900 text-gray-300 p-4 rounded-md text-sm">로딩 중...</pre>}>
+          <SyntaxHighlighter
+            style={syntaxStyle || {}}
+            language={match[1]}
+            PreTag="pre"
+            className="rounded-md"
+            customStyle={{
+              fontSize: '0.875rem',
+              lineHeight: '1.5',
+              padding: '1rem'
+            }}
+            {...props}
+          >
+            {children !== undefined ? String(children).replace(/\n$/, '') : ""}
+          </SyntaxHighlighter>
+        </Suspense>
       );
     }
     
@@ -112,9 +122,30 @@ const markdownComponents: Components = {
   em({ children }) {
     return <em className="italic">{children}</em>;
   },
-};
+});
 
 export const MarkdownRenderer = memo(({ content }: MarkdownRendererProps) => {
+  const [syntaxStyle, setSyntaxStyle] = useState<SyntaxStyle | null>(null);
+  
+  // 스타일을 lazy load
+  useEffect(() => {
+    const loadStyle = async () => {
+      try {
+        const { oneDark } = await import('react-syntax-highlighter/dist/esm/styles/prism');
+        setSyntaxStyle(oneDark as SyntaxStyle);
+      } catch (error) {
+        console.error('SyntaxHighlighter 스타일 로딩 실패:', error);
+      }
+    };
+    
+    // 코드 블록이 있을 때만 스타일 로드
+    if (content.includes('```')) {
+      loadStyle();
+    }
+  }, [content]);
+  
+  const markdownComponents = createMarkdownComponents(syntaxStyle);
+  
   return (
     <div className="markdown-content prose prose-sm max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2">
       <ReactMarkdown

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "AI Chat Interface for Senior Frontend Assignment",
   "type": "module",
+  "sideEffects": false,
   "scripts": {
     "dev": "concurrently \"pnpm:mock\" \"pnpm:dev:vite\"",   
     "dev:vite": "npx vite",    
