@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ChatContainer from './components/Chat/ChatContainer';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Sidebar } from './components/Sidebar/Sidebar';
@@ -11,6 +11,22 @@ import { queryClient } from './lib/queryClient';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // 모바일에서 Ctrl/Cmd+K로 사이드바 열기
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        const isDesktop = window.innerWidth >= 1024; // lg breakpoint
+        if (!isDesktop && !isSidebarOpen) {
+          e.preventDefault();
+          setIsSidebarOpen(true);
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSidebarOpen]);
 
   return (
     <QueryClientProvider client={queryClient}>

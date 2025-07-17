@@ -1,4 +1,4 @@
-import { useState, useCallback, memo, useEffect } from 'react';
+import { useState, useCallback, memo, useEffect, useRef } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { Message } from '@/types/chat';
 import clsx from 'clsx';
@@ -23,6 +23,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMac, setIsMac] = useState(false);
   const [focusedSessionId, setFocusedSessionId] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   const { messages, clearMessages, addMessage, currentChatId, setCurrentChatId } = useChatStore();
   const queryClient = useQueryClient();
@@ -54,11 +55,18 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
         e.preventDefault();
         saveCurrentSession();
       }
+      
+      // Ctrl/Cmd + K - 검색창 포커스 (사이드바가 열려있을 때만)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k' && isOpen) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select(); // 기존 텍스트 선택
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [saveCurrentSession]);
+  }, [saveCurrentSession, isOpen]);
 
   // 세션 불러오기
   const loadSession = useCallback((sessionId: string) => {
@@ -196,9 +204,10 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
         {/* 검색 */}
         <div className="px-4 pb-8 border-b border-[#0d0d0d0d]">
           <input
+            ref={searchInputRef}
             type="text"
             name="search"
-            placeholder="대화 검색"
+            placeholder={`대화 검색 (${isMac ? 'Cmd' : 'Ctrl'}+K)`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-3 py-2 bg-white text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
