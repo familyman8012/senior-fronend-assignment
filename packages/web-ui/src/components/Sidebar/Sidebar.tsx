@@ -1,7 +1,9 @@
-import { useState, useCallback, memo, useEffect, useMemo } from 'react';
+import { useState, useCallback, memo, useEffect } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { Message } from '@/types/chat';
 import clsx from 'clsx';
+import { useChatSessions, useSearchChatSessions, chatQueryKeys } from '@/hooks/useChatQueries';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ChatSession {
   id: string;
@@ -17,13 +19,18 @@ interface SidebarProps {
 }
 
 export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMac, setIsMac] = useState(false);
   const [focusedSessionId, setFocusedSessionId] = useState<string | null>(null);
   
   const { messages, clearMessages, addMessage, currentChatId, setCurrentChatId } = useChatStore();
+  const queryClient = useQueryClient();
+  
+  // Use React Query for sessions
+  const { data: allSessions = [] } = useChatSessions();
+  const { data: searchResults = [] } = useSearchChatSessions(searchQuery);
+  const sessions = searchQuery ? searchResults : allSessions;
 
   // Detect if user is on Mac
   useEffect(() => {
@@ -55,7 +62,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
 
   // Load session
   const loadSession = useCallback((sessionId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
+    const session = allSessions.find(s => s.id === sessionId);
     if (!session) return;
 
     // Clear current messages
@@ -75,15 +82,19 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
 
     setSelectedSessionId(sessionId);
     onClose(); // Close mobile sidebar after selection
-  }, [sessions, clearMessages, addMessage, setCurrentChatId, onClose]);
+  }, [allSessions, clearMessages, addMessage, setCurrentChatId, onClose]);
 
   // Delete session
   const deleteSession = useCallback((sessionId: string) => {
-    setSessions(prev => {
-      const updated = prev.filter(s => s.id !== sessionId);
+    const stored = localStorage.getItem('chatSessions');
+    if (stored) {
+      const sessions = JSON.parse(stored);
+      const updated = sessions.filter((s: { id: string; }) => s.id !== sessionId);
       localStorage.setItem('chatSessions', JSON.stringify(updated));
-      return updated;
-    });
+      
+      // Invalidate query to refresh the list
+      queryClient.invalidateQueries({ queryKey: chatQueryKeys.sessions() });
+    }
     
     // If deleting the current session, redirect to new chat
     if (currentChatId === sessionId) {
@@ -91,7 +102,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
       setCurrentChatId(null);
       setSelectedSessionId(null);
     }
-  }, [currentChatId, clearMessages, setCurrentChatId]);
+  }, [currentChatId, clearMessages, setCurrentChatId, queryClient]);
 
   // Export session
   const exportSession = useCallback((session: ChatSession, format: 'json' | 'markdown') => {
@@ -125,51 +136,15 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
     URL.revokeObjectURL(url);
   }, []);
 
-  // Filter sessions by search query
-  const filteredSessions = useMemo(() => 
-    sessions.filter(session => 
-      session.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      session.messages.some(msg => 
-        msg.content.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    ), [sessions, searchQuery]);
 
-  // Load sessions from localStorage on mount and sync with changes
+  // Invalidate queries periodically to sync with changes
   useEffect(() => {
-    const loadSessions = () => {
-      const stored = localStorage.getItem('chatSessions');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored, (key, value) => {
-            if (key === 'createdAt' || key === 'updatedAt') {
-              return new Date(value);
-            }
-            return value;
-          }) as ChatSession[];
-          setSessions(parsed);
-        } catch (error) {
-          console.error('Failed to load chat sessions:', error);
-        }
-      }
-    };
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: chatQueryKeys.sessions() });
+    }, 2000);
     
-    loadSessions();
-    
-    // Listen for storage changes to sync between tabs
-    const handleStorageChange = () => {
-      loadSessions();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Poll for changes every 2 seconds (to catch changes in the same tab)
-    const interval = setInterval(loadSessions, 2000);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, []);
+    return () => clearInterval(interval);
+  }, [queryClient]);
 
   return (
     <>
@@ -241,10 +216,10 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
         {/* Sessions List */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <div className="space-y-2">
-            {filteredSessions.length === 0 ? (
+            {sessions.length === 0 ? (
               <p className="text-gray-500 text-center py-8 text-sm">저장된 대화가 없습니다</p>
             ) : (
-              filteredSessions.map(session => (
+              sessions.map(session => (
                 <div
                   key={session.id}
                   className={clsx(

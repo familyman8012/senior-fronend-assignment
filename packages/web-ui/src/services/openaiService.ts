@@ -1,6 +1,5 @@
 import OpenAI from 'openai';
 import { ChatCompletionMessageParam, ChatCompletionChunk } from 'openai/resources/chat/completions';
-import { retry } from '@/utils/retry';
 import { createAppError, ErrorType } from '@/utils/errorHandling';
 
 // Configure OpenAI client
@@ -104,10 +103,9 @@ export class OpenAIService {
       model?: string;
       temperature?: number;
       maxTokens?: number;
-      enableRetry?: boolean;
     }
   ): Promise<string> {
-    const createCompletion = async () => {
+    try {
       const response = await openai.chat.completions.create({
         model: options?.model || 'gpt-3.5-turbo',
         messages,
@@ -117,24 +115,21 @@ export class OpenAIService {
       });
 
       return response.choices[0]?.message?.content || '';
-    };
-
-    if (options?.enableRetry !== false) {
-      return retry(createCompletion, {
-        maxAttempts: 3,
-        onRetry: (error, attempt) => {
-          console.warn(`채팅 생성 재시도 (${attempt}/3):`, error.message);
-        },
-      });
-    }
-
-    try {
-      return await createCompletion();
     } catch (error) {
       if (error instanceof Error) {
-        throw new Error(`채팅 생성 실패: ${error.message}`);
+        const errorMessage = error.message.toLowerCase();
+        
+        if (errorMessage.includes('429')) {
+          throw createAppError('요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.', ErrorType.RATE_LIMIT, true, 429);
+        } else if (errorMessage.includes('401')) {
+          throw createAppError('인증에 실패했습니다. API 키를 확인해주세요.', ErrorType.AUTHENTICATION, false, 401);
+        } else if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('connection') || errorMessage.includes('econnrefused')) {
+          throw createAppError('네트워크 연결을 확인해주세요.', ErrorType.NETWORK, true);
+        } else {
+          throw createAppError(`채팅 생성 실패: ${error.message}`, ErrorType.UNKNOWN, true);
+        }
       }
-      throw new Error('채팅 생성 중 알 수 없는 오류가 발생했습니다.');
+      throw createAppError('채팅 생성 중 알 수 없는 오류가 발생했습니다.', ErrorType.UNKNOWN, true);
     }
   }
 }

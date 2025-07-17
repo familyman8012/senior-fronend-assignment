@@ -15,10 +15,11 @@ export const queryClient = new QueryClient({
     },
     mutations: {
       retry: (failureCount, error) => {
-        if (failureCount >= 1) return false;
+        // Mutations: retry up to 2 times for retryable errors
+        if (failureCount >= 2) return false;
         return shouldRetry(error);
       },
-      retryDelay: 1000,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
       onError: (error) => {
         console.error('Mutation error:', error);
       },
