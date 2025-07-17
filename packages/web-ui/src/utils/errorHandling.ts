@@ -44,7 +44,7 @@ export function parseError(error: unknown): AppError {
     // 속도 제한 오류
     if (message.includes('429') || message.includes('rate limit')) {
       return createAppError(
-        '요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.',
+        '요청 속도 제한을 초과했습니다. 잠시 후 다시 시도해주세요.',
         ErrorType.RATE_LIMIT,
         true,
         429
