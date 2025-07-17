@@ -6,20 +6,26 @@ import { useChat } from '@/hooks/useChat';
 import { ErrorAlert } from '@/components/ErrorAlert';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { useAutoScroll } from '@/hooks/useAutoScroll';
 
 const ChatContainer = memo(function ChatContainer() {
   const { messages, error, currentStreamingId } = useChatStore();
   const { sendMessage, cancelStream, regenerateMessage, editAndResendMessage, isStreaming } = useChat();
   const { isOnline } = useNetworkStatus();
+  const { scrollEndRef, scrollToBottom, isAtBottom } = useAutoScroll();
 
-  // 새 메시지가 도착하면 맨 아래로 자동 스크롤
+  // 새 메시지가 도착하면 자동 스크롤 (사용자가 하단에 있을 때만)
   useEffect(() => {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-  }, [messages]);
+    if (isAtBottom) {
+      scrollToBottom();
+    }
+  }, [messages, isAtBottom, scrollToBottom]);
 
   const handleSendMessage = useCallback(async (content: string) => {
     await sendMessage(content);
-  }, [sendMessage]);
+    // 사용자가 메시지를 보낼 때 항상 하단으로 스크롤
+    setTimeout(scrollToBottom, 100);
+  }, [sendMessage, scrollToBottom]);
 
   const handleRetry = useCallback(() => {
     // 마지막 메시지가 사용자의 메시지인지 확인 (전송 실패 시나리오)
@@ -91,7 +97,20 @@ const ChatContainer = memo(function ChatContainer() {
         )}
       </div>
 
-      <div className="sticky bottom-0 border-t border-gray-200 bg-white px-4 py-4">       
+      <div className="sticky bottom-0 border-t border-gray-200 bg-white px-4 py-4">
+        {/* 스크롤 다운 버튼 */}
+        {!isAtBottom && messages.length > 0 && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-full p-2 hover:shadow-xl transition-shadow"
+            aria-label="최신 메시지로 이동"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </button>
+        )}
+        
         {currentStreamingId && (
           <div className="flex items-center justify-center mb-2">
             <LoadingIndicator />
@@ -107,6 +126,9 @@ const ChatContainer = memo(function ChatContainer() {
           disabled={!!currentStreamingId || !isOnline}
         />
       </div>
+      
+      {/* 스크롤 끝 지점 마커 */}
+      <div ref={scrollEndRef} />
     </div>
   );
 });
