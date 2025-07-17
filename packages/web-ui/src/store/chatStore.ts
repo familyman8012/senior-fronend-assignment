@@ -24,7 +24,14 @@ type ChatStore = ChatState & ChatActions & {
   currentChatId: string | null;
 };
 
-const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+const generateId = () => {
+  // crypto.randomUUID()를 사용하되, 지원하지 않는 환경을 위한 폴백 제공
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // 폴백: 기존 방식 사용
+  return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
 
 export const useChatStore = create<ChatStore>()(
   devtools(
@@ -123,7 +130,7 @@ export const useChatStore = create<ChatStore>()(
         },
 
         createNewChat: () => {
-          const chatId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          const chatId = generateId();
           set({ currentChatId: chatId, messages: [], error: null });
         },
 

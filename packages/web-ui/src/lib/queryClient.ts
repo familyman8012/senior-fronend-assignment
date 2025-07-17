@@ -1,7 +1,19 @@
-import { QueryClient } from '@tanstack/react-query';
-import { shouldRetry } from '@/utils/errorHandling';
+import { QueryClient, MutationCache, QueryCache } from '@tanstack/react-query';
+import { shouldRetry, errorHandler } from '@/utils/errorHandling';
 
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      // 쿼리 에러 중앙 처리
+      errorHandler.handle(error, `Query:${query.queryKey.join('.')}`);
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error, variables, context, mutation) => {
+      // 뮤테이션 에러 중앙 처리
+      errorHandler.handle(error, `Mutation:${mutation.options.mutationKey?.join('.') || 'unknown'}`);
+    },
+  }),
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
@@ -20,9 +32,6 @@ export const queryClient = new QueryClient({
         return shouldRetry(error);
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
-      onError: (error) => {
-        console.error('Mutation error:', error);
-      },
     },
   },
 });

@@ -32,40 +32,58 @@ export class OpenAIService {
     maxTokens = 1000,
     signal,
     onChunk,
+    onError,
     onComplete,
   }: ChatStreamOptions): Promise<void> {
-    const stream = await openai.chat.completions.create({
-      model,
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-      stream: true,
-    }, { signal });
+    try {
+      const stream = await openai.chat.completions.create({
+        model,
+        messages,
+        temperature,
+        max_tokens: maxTokens,
+        stream: true,
+      }, { signal });
 
-    let detectedContentType: string | undefined;
-    
-    for await (const chunk of stream) {
-      // 먼저 중단 상태 확인
-      if (signal?.aborted) {
-        break;  // 예외를 던지는 대신 루프 종료
-      }
-
-      const content = chunk.choices[0]?.delta?.content || '';
-      const contentType = (chunk.choices[0]?.delta as DeltaWithContentType)?.contentType;
+      let detectedContentType: string | undefined;
       
-      // contentType이 처음 감지되면 저장
-      if (contentType && !detectedContentType) {
-        detectedContentType = contentType;
+      for await (const chunk of stream) {
+        // 먼저 중단 상태 확인
+        if (signal?.aborted) {
+          break;  // 예외를 던지는 대신 루프 종료
+        }
+
+        const content = chunk.choices[0]?.delta?.content || '';
+        const contentType = (chunk.choices[0]?.delta as DeltaWithContentType)?.contentType;
+        
+        // contentType이 처음 감지되면 저장
+        if (contentType && !detectedContentType) {
+          detectedContentType = contentType;
+        }
+        
+        // content가 있거나 contentType이 변경된 경우 콜백 호출
+        if ((content || contentType) && onChunk) {
+          onChunk(content, detectedContentType);
+        }
+
+        // 스트림이 끝났는지 확인
+        if (chunk.choices[0]?.finish_reason === 'stop') {
+          onComplete?.();
+          break;
+        }
+      }
+    } catch (error) {
+      // AbortError 포함 모든 에러를 캐치
+      if (error instanceof Error && error.name === 'AbortError') {
+        // 중단은 정상적인 플로우이므로 조용히 처리
+        return;
       }
       
-      if (content && onChunk) {
-        onChunk(content, detectedContentType);
-      }
-
-      // 스트림이 끝났는지 확인
-      if (chunk.choices[0]?.finish_reason === 'stop') {
-        onComplete?.();
-        break;
+      // 다른 에러는 onError 콜백으로 전달
+      if (onError) {
+        onError(error instanceof Error ? error : new Error('Unknown error occurred'));
+      } else {
+        // onError가 없으면 에러를 다시 던짐
+        throw error;
       }
     }
   }

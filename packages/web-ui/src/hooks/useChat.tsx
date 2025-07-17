@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useChatStore } from '@/store/chatStore';
 import { ContentType } from '@/types/chat';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
@@ -7,6 +8,7 @@ import { errorHandler } from '@/utils/errorHandling';
 
 export function useChat() {
   const { isOnline } = useNetworkStatus();
+  const queryClient = useQueryClient();
   const {
     addMessage,
     setError,
@@ -61,7 +63,10 @@ export function useChat() {
         addMessage(userMessage);
         
         // 사용자 메시지 추가 후 자동 저장
-        setTimeout(() => saveCurrentChat(), 100);
+        setTimeout(() => {
+          saveCurrentChat();
+          queryClient.invalidateQueries({ queryKey: ['chatSessions'] });
+        }, 100);
       }
     } else if (type === 'regenerate') {
       const messageIndex = messages.findIndex(msg => msg.id === params.messageId);
@@ -101,7 +106,10 @@ export function useChat() {
       {
         onSuccess: () => {
           // 어시스턴트 메시지 완료 후 자동 저장
-          setTimeout(() => saveCurrentChat(), 100);
+          setTimeout(() => {
+            saveCurrentChat();
+            queryClient.invalidateQueries({ queryKey: ['chatSessions'] });
+          }, 100);
         },
       }
     );

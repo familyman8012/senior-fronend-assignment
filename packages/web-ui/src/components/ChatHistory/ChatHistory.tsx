@@ -1,6 +1,8 @@
-import { useState, useCallback, memo } from 'react';
+import { useState, useCallback, memo, useEffect } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { Message } from '@/types/chat';
+import { useChatSessions, useSearchChatSessions } from '@/hooks/useChatQueries';
+import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 
 interface ChatSession {
@@ -14,12 +16,17 @@ interface ChatSession {
 
 
 export const ChatHistory = memo(() => {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const queryClient = useQueryClient();
   
   const { messages, clearMessages, addMessage, currentChatId, setCurrentChatId } = useChatStore();
+  
+  // React Query를 사용하여 세션 데이터 관리
+  const { data: allSessions = [] } = useChatSessions();
+  const { data: searchResults } = useSearchChatSessions(searchQuery);
+  const sessions = searchQuery ? searchResults || [] : allSessions;
 
   // Save current session (새 대화 시작)
   const saveCurrentSession = useCallback(() => {
@@ -32,7 +39,7 @@ export const ChatHistory = memo(() => {
 
   // Load session
   const loadSession = useCallback((sessionId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
+    const session = allSessions.find(s => s.id === sessionId);
     if (!session) return;
 
     // Clear current messages
@@ -52,16 +59,18 @@ export const ChatHistory = memo(() => {
 
     setSelectedSessionId(sessionId);
     setIsOpen(false);
-  }, [sessions, clearMessages, addMessage, setCurrentChatId]);
+  }, [allSessions, clearMessages, addMessage, setCurrentChatId]);
 
   // Delete session
   const deleteSession = useCallback((sessionId: string) => {
-    setSessions(prev => {
-      const updated = prev.filter(s => s.id !== sessionId);
+    const stored = localStorage.getItem('chatSessions');
+    if (stored) {
+      const sessions = JSON.parse(stored);
+      const updated = sessions.filter((s: { id: string }) => s.id !== sessionId);
       localStorage.setItem('chatSessions', JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
+    }
+  }, [queryClient]);
 
   // Export session
   const exportSession = useCallback((session: ChatSession, format: 'json' | 'markdown') => {
@@ -95,50 +104,18 @@ export const ChatHistory = memo(() => {
     URL.revokeObjectURL(url);
   }, []);
 
-  // Filter sessions by search query
-  const filteredSessions = sessions.filter(session => 
-    session.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    session.messages.some(msg => 
-      msg.content.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
-
-  // Load sessions from localStorage on mount and sync with changes
-  useState(() => {
-    const loadSessions = () => {
-      const stored = localStorage.getItem('chatSessions');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored, (key, value) => {
-            if (key === 'createdAt' || key === 'updatedAt') {
-              return new Date(value);
-            }
-            return value;
-          }) as ChatSession[];
-          setSessions(parsed);
-        } catch (error) {
-          console.error('Failed to load chat sessions:', error);
-        }
-      }
-    };
-    
-    loadSessions();
-    
-    // Listen for storage changes to sync between tabs
+  // Storage 변경 감지 및 React Query 무효화
+  useEffect(() => {
     const handleStorageChange = () => {
-      loadSessions();
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
     };
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Poll for changes every 2 seconds (to catch changes in the same tab)
-    const interval = setInterval(loadSessions, 2000);
-    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
-  });
+  }, [queryClient]);
 
   return (
     <>
@@ -207,10 +184,10 @@ export const ChatHistory = memo(() => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {filteredSessions.length === 0 ? (
+              {sessions.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">저장된 대화가 없습니다</p>
               ) : (
-                filteredSessions.map(session => (
+                sessions.map(session => (
                   <div
                     key={session.id}
                     className={clsx(

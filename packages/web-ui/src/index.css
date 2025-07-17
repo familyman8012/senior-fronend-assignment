@@ -1,8 +1,12 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 폰트 최적화를 위한 font-display 설정 */
+@font-face {
+  font-family: 'Pretendard Variable';
+  font-display: swap;
+}
 
 :root {
  
