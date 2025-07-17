@@ -27,11 +27,8 @@ export function useChatSessions() {
       
       try {
         const sessions = JSON.parse(sessionsStr);
-        return sessions.map((session: ChatSession) => ({
-          ...session,
-          createdAt: new Date(session.createdAt),
-          updatedAt: new Date(session.updatedAt),
-        }));
+        // 날짜 파싱을 필요시에만 수행하도록 변경
+        return sessions;
       } catch (error) {
         console.error('Failed to parse chat sessions:', error);
         return [];
@@ -58,11 +55,8 @@ export function useChatSession(chatId: string | null) {
         
         if (!session) return null;
         
-        return {
-          ...session,
-          createdAt: new Date(session.createdAt),
-          updatedAt: new Date(session.updatedAt),
-        };
+        // 날짜 파싱을 필요시에만 수행하도록 변경
+        return session;
       } catch (error) {
         console.error('Failed to parse chat session:', error);
         return null;

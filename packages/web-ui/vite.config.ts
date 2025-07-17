@@ -53,7 +53,9 @@ export default defineConfig({
         manualChunks: (id) => {
           // node_modules의 패키지를 기반으로 청크 분리
           if (id.includes('node_modules')) {
-            if (id.includes('react') && !id.includes('react-')) {
+            // React 및 react-dom을 함께 번들링
+            if (id.includes('react') && !id.includes('react-') || 
+                id.includes('react-dom')) {
               return 'react-vendor';
             }
             if (id.includes('react-markdown') || id.includes('remark-gfm')) {
@@ -86,7 +88,19 @@ export default defineConfig({
       // 트리쉐이킹 최적화
       treeshake: {
         preset: 'recommended',
-        moduleSideEffects: 'no-external',
+        // 패키지별로 side-effect 명시적 처리
+        moduleSideEffects: (id: string) => {
+          // 특정 패키지의 side-effect 보존
+          if (id.includes('polyfill') || id.includes('regenerator-runtime')) {
+            return true;
+          }
+          // node_modules 외부 파일은 side-effect 있다고 가정
+          if (!id.includes('node_modules')) {
+            return true;
+          }
+          // 나머지 외부 모듈은 side-effect 없다고 가정
+          return false;
+        },
       },
     },
   },
