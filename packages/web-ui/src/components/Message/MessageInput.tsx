@@ -7,7 +7,7 @@ interface MessageInputProps {
   disabled?: boolean;
 }
 
-export const MessageInput = memo(function MessageInput({ onSendMessage, isLoading, disabled }: MessageInputProps) {
+function MessageInput({ onSendMessage, isLoading, disabled }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -125,4 +125,6 @@ export const MessageInput = memo(function MessageInput({ onSendMessage, isLoadin
       </div>
     </form>
   );
-});
+}
+
+export default memo(MessageInput);

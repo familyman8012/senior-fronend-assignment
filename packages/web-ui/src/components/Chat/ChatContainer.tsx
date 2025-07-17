@@ -1,14 +1,14 @@
 import { useEffect, useCallback, memo } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { MessageList } from '@/components/Message/MessageList';
-import { MessageInput } from '@/components/Message/MessageInput';
+import MessageInput from '@/components/Message/MessageInput';
 import { useChat } from '@/hooks/useChat';
 import { ErrorAlert } from '@/components/ErrorAlert';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 
-const ChatContainer = memo(function ChatContainer() {
+function ChatContainer() {
   const { messages, error, currentStreamingId } = useChatStore();
   const { sendMessage, cancelStream, regenerateMessage, editAndResendMessage, isStreaming } = useChat();
   const { isOnline } = useNetworkStatus();
@@ -131,6 +131,6 @@ const ChatContainer = memo(function ChatContainer() {
       <div ref={scrollEndRef} />
     </div>
   );
-});
+}
 
-export default ChatContainer;
+export default memo(ChatContainer);
