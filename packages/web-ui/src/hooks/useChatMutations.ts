@@ -28,7 +28,7 @@ export function useChatMutations() {
     saveCurrentChat,
   } = useChatStore();
 
-  // Unified mutation for all message operations
+  // 모든 메시지 작업을 위한 통합된 뮤테이션
   const messageMutation = useMutation({
     mutationFn: async ({ type, assistantMessageId }: MessageMutationVariables) => {
       if (!isOnline) {
@@ -61,7 +61,7 @@ export function useChatMutations() {
           onChunk: (chunk, contentType) => {
             appendToStreamingMessage(assistantMessageId, chunk);
             
-            // Update contentType when first detected
+            // contentType이 처음 감지되면 업데이트
             if (contentType) {
               const message = useChatStore.getState().messages.find(m => m.id === assistantMessageId);
               if (message && message.contentType === 'text') {
@@ -72,12 +72,12 @@ export function useChatMutations() {
           onComplete: () => {
             updateMessage(assistantMessageId, { isStreaming: false });
             setStreamingId(null);
-            // Auto-save after streaming completes
+            // 스트리밍 완료 후 자동 저장
             setTimeout(() => saveCurrentChat(), 100);
           },
         });
       } finally {
-        // Immediately clean up AbortController to prevent memory leaks
+        // 메모리 누수를 방지하기 위해 AbortController를 즉시 정리
         setAbortController(null);
       }
     },
@@ -90,12 +90,12 @@ export function useChatMutations() {
       }
       setStreamingId(null);
       
-      // Use centralized error handler
+      // 중앙 집중식 오류 처리기 사용
       errorHandler.handle(error, `ChatMutation:${variables.type}`);
     },
   });
 
-  // Cancel stream function
+  // 스트림 취소 함수
   const cancelStream = () => {
     const controller = getAbortController();
     if (controller) {

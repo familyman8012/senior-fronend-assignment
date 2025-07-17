@@ -5,7 +5,7 @@ interface TextRendererProps {
 }
 
 export const TextRenderer = memo(({ content }: TextRendererProps) => {
-  // Convert URLs to clickable links
+  // URL을 클릭 가능한 링크로 변환
   const renderTextWithLinks = useMemo(() => (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
@@ -28,8 +28,9 @@ export const TextRenderer = memo(({ content }: TextRendererProps) => {
     });
   }, []);
 
-  // Preserve line breaks and whitespace
+  // 줄 바꿈 및 공백 유지
   const lines = useMemo(() => content.split('\n'), [content]);
+
 
   return (
     <div className="text-content">

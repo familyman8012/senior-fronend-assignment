@@ -12,7 +12,7 @@ const ChatContainer = memo(function ChatContainer() {
   const { sendMessage, cancelStream, regenerateMessage, editAndResendMessage, isStreaming } = useChat();
   const { isOnline } = useNetworkStatus();
 
-  // Auto-scroll to bottom when new messages arrive
+  // 새 메시지가 도착하면 맨 아래로 자동 스크롤
   useEffect(() => {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   }, [messages]);
@@ -22,23 +22,23 @@ const ChatContainer = memo(function ChatContainer() {
   }, [sendMessage]);
 
   const handleRetry = useCallback(() => {
-    // Check if last message is from user (failed send scenario)
+    // 마지막 메시지가 사용자의 메시지인지 확인 (전송 실패 시나리오)
     const lastMessage = messages[messages.length - 1];
     
     if (lastMessage?.role === 'user') {
-      // Resend the last user message with retry flag to avoid duplicate
+      // 중복을 피하기 위해 재시도 플래그와 함께 마지막 사용자 메시지 다시 보내기
       sendMessage(lastMessage.content, true);
     } else if (lastMessage?.role === 'assistant') {
-      // Regenerate the last assistant message
+      // 마지막 어시스턴트 메시지 재성성
       regenerateMessage(lastMessage.id);
     }
   }, [messages, regenerateMessage, sendMessage]);
 
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // Cancel streaming with Escape key only if assistant message has content
+    // 어시스턴트 메시지에 내용이 있는 경우에만 Escape 키로 스트리밍 취소
     if (e.key === 'Escape' && currentStreamingId) {
-      // Check if the streaming message exists and has content
+      // 스트리밍 메시지가 존재하고 내용이 있는지 확인
       const streamingMessage = useChatStore.getState().messages.find(msg => msg.id === currentStreamingId);
       if (streamingMessage && streamingMessage.role === 'assistant' && streamingMessage.content.trim().length > 0) {
         cancelStream();

@@ -19,7 +19,7 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
   const isUser = message.role === 'user';
   const isStreaming = message.isStreaming;
 
-  // Cancel edit mode when a new message is added
+  // 새 메시지가 추가되면 편집 모드 취소
   useEffect(() => {
     if (messagesLength > prevMessagesLengthRef.current && isEditing) {
       setIsEditing(false);

@@ -1,8 +1,8 @@
 import OpenAI from 'openai';
 import { ChatCompletionMessageParam, ChatCompletionChunk } from 'openai/resources/chat/completions';
 
-// Configure OpenAI client
-// In development, we expect a mock server to be running on localhost:3001
+// OpenAI 클라이언트 구성
+// 개발 환경에서는 localhost:3001에서 모의 서버가 실행될 것으로 예상합니다.
 const openai = new OpenAI({
   apiKey:  'test-key',
   baseURL: 'http://localhost:3001/v1',
@@ -32,7 +32,6 @@ export class OpenAIService {
     maxTokens = 1000,
     signal,
     onChunk,
-    onError,
     onComplete,
   }: ChatStreamOptions): Promise<void> {
     const stream = await openai.chat.completions.create({
@@ -46,15 +45,15 @@ export class OpenAIService {
     let detectedContentType: string | undefined;
     
     for await (const chunk of stream) {
-      // Check abort status first
+      // 먼저 중단 상태 확인
       if (signal?.aborted) {
-        break;  // Exit the loop instead of throwing
+        break;  // 예외를 던지는 대신 루프 종료
       }
 
       const content = chunk.choices[0]?.delta?.content || '';
       const contentType = (chunk.choices[0]?.delta as DeltaWithContentType)?.contentType;
       
-      // Store contentType when first detected
+      // contentType이 처음 감지되면 저장
       if (contentType && !detectedContentType) {
         detectedContentType = contentType;
       }
@@ -63,7 +62,7 @@ export class OpenAIService {
         onChunk(content, detectedContentType);
       }
 
-      // Check if stream is finished
+      // 스트림이 끝났는지 확인
       if (chunk.choices[0]?.finish_reason === 'stop') {
         onComplete?.();
         break;

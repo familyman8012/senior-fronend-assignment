@@ -30,14 +30,14 @@ export const useChatStore = create<ChatStore>()(
   devtools(
     persist(
       (set, get) => ({
-        // State
+        // 상태
         messages: [],
         error: null,
         currentStreamingId: null,
         abortController: null,
         currentChatId: null,
 
-        // Actions
+        // 액션
         addMessage: (message) => {
           const newMessage: Message = {
             ...message,
@@ -99,7 +99,7 @@ export const useChatStore = create<ChatStore>()(
           set((state) => {
             const messageIndex = state.messages.findIndex((msg) => msg.id === id);
             if (messageIndex === -1 || state.messages[messageIndex].role !== 'user') {
-              return state; // No change if message not found or not a user message
+              return state; // 메시지를 찾을 수 없거나 사용자 메시지가 아니면 변경하지 않음
             }
 
             const updatedMessages = state.messages.slice(0, messageIndex + 1).map((msg, index) =>
@@ -140,10 +140,10 @@ export const useChatStore = create<ChatStore>()(
             updatedAt: new Date(),
           };
 
-          // Load existing chats
+          // 기존 채팅 불러오기
           const existingChats = JSON.parse(localStorage.getItem('chatSessions') || '[]');
           
-          // Update if exists, otherwise add new
+          // 존재하면 업데이트, 그렇지 않으면 새로 추가
           const chatIndex = existingChats.findIndex((chat:  { id: string }) => chat.id === state.currentChatId);
           if (chatIndex !== -1) {
             existingChats[chatIndex] = { ...chatData, createdAt: existingChats[chatIndex].createdAt };
@@ -161,13 +161,13 @@ export const useChatStore = create<ChatStore>()(
           currentChatId: state.currentChatId,
         }),
         onRehydrateStorage: () => (state) => {
-          // Clear any lingering streaming messages after hydration
+          // 하이드레이션 후 남아있는 스트리밍 메시지 지우기
           if (state) {
             state.currentStreamingId = null;
             state.abortController = null;
             
-            // Don't auto-load previous chat on fresh page load
-            // Always start with a new chat
+            // 페이지 새로고침 시 이전 채팅 자동 로드 안 함
+            // 항상 새 채팅으로 시작
             state.messages = [];
             state.currentChatId = null;
           }

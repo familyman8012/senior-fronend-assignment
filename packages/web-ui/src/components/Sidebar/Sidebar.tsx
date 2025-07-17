@@ -27,26 +27,26 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
   const { messages, clearMessages, addMessage, currentChatId, setCurrentChatId } = useChatStore();
   const queryClient = useQueryClient();
   
-  // Use React Query for sessions
+  // React Query를 사용하여 세션 관리
   const { data: allSessions = [] } = useChatSessions();
   const { data: searchResults = [] } = useSearchChatSessions(searchQuery);
   const sessions = searchQuery ? searchResults : allSessions;
 
-  // Detect if user is on Mac
+  // 사용자가 Mac을 사용하는지 감지
   useEffect(() => {
     setIsMac(navigator.platform.toUpperCase().indexOf('MAC') >= 0);
   }, []);
 
-  // Save current session (새 대화 시작)
+  // 현재 세션 저장 (새 대화 시작)
   const saveCurrentSession = useCallback(() => {
     if (messages.length === 0) return;
 
-    // Clear current messages and start new chat
+    // 현재 메시지를 지우고 새 채팅 시작
     clearMessages();
     setCurrentChatId(null);
   }, [messages, clearMessages, setCurrentChatId]);
 
-  // Handle keyboard shortcut
+  // 키보드 단축키 처리
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl/Cmd + Shift + O
@@ -60,18 +60,18 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [saveCurrentSession]);
 
-  // Load session
+  // 세션 불러오기
   const loadSession = useCallback((sessionId: string) => {
     const session = allSessions.find(s => s.id === sessionId);
     if (!session) return;
 
-    // Clear current messages
+    // 현재 메시지 지우기
     clearMessages();
     
-    // Set current chat ID for continuity
+    // 연속성을 위해 현재 채팅 ID 설정
     setCurrentChatId(sessionId);
     
-    // Load session messages
+    // 세션 메시지 불러오기
     session.messages.forEach(msg => {
       addMessage({
         role: msg.role,
@@ -81,10 +81,10 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
     });
 
     setSelectedSessionId(sessionId);
-    onClose(); // Close mobile sidebar after selection
+    onClose(); // 선택 후 모바일 사이드바 닫기
   }, [allSessions, clearMessages, addMessage, setCurrentChatId, onClose]);
 
-  // Delete session
+  // 세션 삭제
   const deleteSession = useCallback((sessionId: string) => {
     const stored = localStorage.getItem('chatSessions');
     if (stored) {
@@ -92,11 +92,11 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
       const updated = sessions.filter((s: { id: string; }) => s.id !== sessionId);
       localStorage.setItem('chatSessions', JSON.stringify(updated));
       
-      // Invalidate query to refresh the list
+      // 목록을 새로고침하기 위해 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.sessions() });
     }
     
-    // If deleting the current session, redirect to new chat
+    // 현재 세션을 삭제하는 경우 새 채팅으로 리디렉션
     if (currentChatId === sessionId) {
       clearMessages();
       setCurrentChatId(null);
@@ -104,7 +104,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
     }
   }, [currentChatId, clearMessages, setCurrentChatId, queryClient]);
 
-  // Export session
+  // 세션 내보내기
   const exportSession = useCallback((session: ChatSession, format: 'json' | 'markdown') => {
     let content: string;
     const filename = `chat_${session.id}_${new Date().toISOString()}`;
@@ -112,7 +112,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
     if (format === 'json') {
       content = JSON.stringify(session, null, 2);
     } else {
-      // Markdown format
+      // 마크다운 형식
       content = `# ${session.title}\n\n`;
       content += `Created: ${session.createdAt.toLocaleString()}\n\n`;
       content += '---\n\n';
@@ -122,9 +122,9 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
       });
     }
 
-    // Create blob and download
-    const blob = new Blob([content], { 
-      type: format === 'json' ? 'application/json' : 'text/markdown' 
+    // Blob을 생성하여 다운로드
+    const blob = new Blob([content], {
+      type: format === 'json' ? 'application/json' : 'text/markdown'
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -137,7 +137,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
   }, []);
 
 
-  // Invalidate queries periodically to sync with changes
+  // 변경 사항과 동기화하기 위해 주기적으로 쿼리 무효화
   useEffect(() => {
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.sessions() });
@@ -148,7 +148,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
 
   return (
     <>
-      {/* Mobile backdrop */}
+      {/* 모바일 백드롭 */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
@@ -156,14 +156,14 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
         />
       )}
 
-      {/* Sidebar */}
+      {/* 사이드바 */}
       <div
         className={clsx(
           'fixed lg:sticky lg:top-0 inset-y-0 lg:inset-y-auto left-0 z-50 w-64 bg-gray-50 transform transition-transform duration-300 ease-in-out flex flex-col lg:h-screen',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        {/* Logo and New Chat */}
+        {/* 로고 및 새 채팅 */}
         <div className="p-4">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-2">
@@ -172,7 +172,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
               </div>
               <span className="text-gray-900 font-medium">nextchapter</span>
             </div>
-            {/* Mobile close button */}
+            {/* 모바일 닫기 버튼 */}
             <button
               onClick={onClose}
               className="lg:hidden p-1 hover:bg-gray-200 rounded text-gray-600"
@@ -200,7 +200,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
           </button>
         </div>
 
-        {/* Search */}
+        {/* 검색 */}
         <div className="px-4 pb-8 border-b border-[#0d0d0d0d]">
           <input
             type="text"
@@ -213,7 +213,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
           />
         </div>
 
-        {/* Sessions List */}
+        {/* 세션 목록 */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <div className="space-y-2">
             {sessions.length === 0 ? (
@@ -249,7 +249,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
                     </p>
                   </div>
                   
-                  {/* Action buttons */}
+                  {/* 액션 버튼 */}
                   <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex gap-1">
                     <button
                       onClick={(e) => {

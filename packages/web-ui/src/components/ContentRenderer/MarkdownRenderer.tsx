@@ -53,7 +53,7 @@ const createMarkdownComponents = (syntaxStyle: SyntaxStyle | null): Components =
       </code>
     );
   },
-  // Custom table rendering for better styling
+  // 더 나은 스타일링을 위한 사용자 정의 테이블 렌더링
   table({ children }) {
     return (
       <div className="overflow-x-auto my-4">
@@ -80,7 +80,7 @@ const createMarkdownComponents = (syntaxStyle: SyntaxStyle | null): Components =
       </td>
     );
   },
-  // Custom link rendering for security
+  // 보안을 위한 사용자 정의 링크 렌더링
   a({ href, children }) {
     return (
       <a
@@ -93,14 +93,14 @@ const createMarkdownComponents = (syntaxStyle: SyntaxStyle | null): Components =
       </a>
     );
   },
-  // Custom list rendering
+  // 사용자 정의 목록 렌더링
   ul({ children }) {
     return <ul className="list-disc list-inside my-2 space-y-1">{children}</ul>;
   },
   ol({ children }) {
     return <ol className="list-decimal list-inside my-2 space-y-1">{children}</ol>;
   },
-  // Custom heading rendering - prose 클래스와의 충돌 방지
+  // 사용자 정의 제목 렌더링 - prose 클래스와의 충돌 방지
   h1({ children }) {
     return <h1 className="text-2xl font-bold mt-4 mb-2 prose-h1:text-2xl">{children}</h1>;
   },
@@ -110,7 +110,7 @@ const createMarkdownComponents = (syntaxStyle: SyntaxStyle | null): Components =
   h3({ children }) {
     return <h3 className="text-lg font-semibold mt-2 mb-1 prose-h3:text-lg">{children}</h3>;
   },
-  // Custom blockquote
+  // 사용자 정의 인용구
   blockquote({ children }) {
     return (
       <blockquote className="border-l-4 border-gray-300 pl-4 py-2 my-2 italic text-gray-700">
@@ -118,7 +118,7 @@ const createMarkdownComponents = (syntaxStyle: SyntaxStyle | null): Components =
       </blockquote>
     );
   },
-  // Custom emphasis rendering
+  // 사용자 정의 강조 렌더링
   em({ children }) {
     return <em className="italic">{children}</em>;
   },

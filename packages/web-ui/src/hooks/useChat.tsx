@@ -34,7 +34,7 @@ export function useChat() {
     return actualAssistantMessage?.id;
   }, [addMessage]);
 
-  // Unified message handler for send, regenerate, and editAndResend
+  // 보내기, 재성성, 수정 및 다시 보내기를 위한 통합 메시지 핸들러
   const handleMessage = useCallback(async (
     type: 'send' | 'regenerate' | 'editAndResend',
     params: { content?: string; messageId?: string; newContent?: string; isRetry?: boolean }
@@ -45,14 +45,14 @@ export function useChat() {
     }
     setError(null);
 
-    // Type-specific preprocessing
+    // 유형별 전처리
     if (type === 'send') {
-      // Create new chat if this is the first message
+      // 첫 메시지인 경우 새 채팅 생성
       if (!currentChatId && messages.length === 0) {
         createNewChat();
       }
       
-      // Only add user message if not retrying (retry reuses existing message)
+      // 재시도가 아닌 경우에만 사용자 메시지 추가 (재시도는 기존 메시지 재사용)
       if (!params.isRetry) {
         const userMessage = {
           role: 'user' as const,
@@ -60,7 +60,7 @@ export function useChat() {
         };
         addMessage(userMessage);
         
-        // Auto-save after adding user message
+        // 사용자 메시지 추가 후 자동 저장
         setTimeout(() => saveCurrentChat(), 100);
       }
     } else if (type === 'regenerate') {
@@ -74,21 +74,21 @@ export function useChat() {
       useChatStore.getState().editMessage(params.messageId!, params.newContent!);
     }
 
-    // Get content type from previous message for regenerate
+    // 재성성을 위해 이전 메시지에서 콘텐츠 유형 가져오기
     let contentType: ContentType = 'text';
     if (type === 'regenerate') {
       const messageIndex = messages.findIndex(msg => msg.id === params.messageId);
       contentType = messages[messageIndex].contentType || 'text';
     }
 
-    // Create assistant message
+    // 어시스턴트 메시지 생성
     const assistantMessageId = createAssistantMessage(contentType);
     if (!assistantMessageId) {
       errorHandler.handle(new Error('메시지 생성에 실패했습니다.'), 'CreateAssistantMessage');
       return;
     }
 
-    // Execute mutation
+    // 뮤테이션 실행
     messageMutation.mutate(
       {
         type,
@@ -100,14 +100,14 @@ export function useChat() {
       },
       {
         onSuccess: () => {
-          // Auto-save after assistant message is complete
+          // 어시스턴트 메시지 완료 후 자동 저장
           setTimeout(() => saveCurrentChat(), 100);
         },
       }
     );
   }, [addMessage, isOnline, messages, setError, createAssistantMessage, messageMutation]);
 
-  // Convenience methods that use the unified handler
+  // 통합 핸들러를 사용하는 편의 메소드
   const sendMessage = useCallback((content: string, isRetry = false) => {
     return handleMessage('send', { content, isRetry });
   }, [handleMessage]);
@@ -126,7 +126,7 @@ export function useChat() {
     cancelStream,
     regenerateMessage,
     editAndResendMessage,
-    // Mutation states
+    // 뮤테이션 상태
     isSending: messageMutation.isPending && messageMutation.variables?.type === 'send',
     isRegenerating: messageMutation.isPending && messageMutation.variables?.type === 'regenerate',
     isEditing: messageMutation.isPending && messageMutation.variables?.type === 'editAndResend',

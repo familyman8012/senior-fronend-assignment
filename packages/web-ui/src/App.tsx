@@ -19,24 +19,24 @@ function App() {
           <SkipNavigation />
           <ToastContainer />
           
-          {/* Desktop Sidebar */}
+          {/* 데스크톱 사이드바 */}
           <div className="hidden lg:block">
             <Sidebar isOpen={true} onClose={() => {}} />
           </div>
 
-          {/* Mobile Sidebar */}
+          {/* 모바일 사이드바 */}
           <div className="lg:hidden">
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
           </div>
 
-          {/* Main Content */}
+          {/* 메인 콘텐츠 */}
           <div className="flex-1 flex flex-col">
-            {/* Header */}
+            {/* 헤더 */}
             <header className="sticky top-0 bg-white z-10">
               <div className="px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14">
                   <div className="flex items-center">
-                    {/* Mobile menu button */}
+                    {/* 모바일 메뉴 버튼 */}
                     <button
                       onClick={() => setIsSidebarOpen(true)}
                       className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-500"
@@ -62,7 +62,7 @@ function App() {
               </div>
             </header>
 
-            {/* Chat Container */}
+            {/* 채팅 컨테이너 */}
             <main id="main-content" className="flex-1">
               <ChatContainer />
               <OfflineIndicator />

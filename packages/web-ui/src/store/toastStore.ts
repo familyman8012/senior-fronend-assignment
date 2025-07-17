@@ -27,7 +27,7 @@ export const useToastStore = create<ToastStore>((set) => ({
       toasts: [...state.toasts, newToast],
     }));
     
-    // Auto remove after duration (default 3 seconds)
+    // 지속 시간 후 자동 제거 (기본 3초)
     const duration = toast.duration ?? 3000;
     if (duration > 0) {
       setTimeout(() => {
@@ -49,7 +49,7 @@ export const useToastStore = create<ToastStore>((set) => ({
   },
 }));
 
-// Toast helper functions
+// 토스트 헬퍼 함수
 export const toast = {
   success: (message: string, duration?: number) => {
     useToastStore.getState().addToast({ type: 'success', message, duration });

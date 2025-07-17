@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Message } from '@/types/chat';
 
-// Keys for React Query
+// React Query를 위한 키
 export const chatQueryKeys = {
   all: ['chats'] as const,
   sessions: () => [...chatQueryKeys.all, 'sessions'] as const,
@@ -17,7 +17,7 @@ interface ChatSession {
   updatedAt: Date;
 }
 
-// Get all chat sessions
+// 모든 채팅 세션 가져오기
 export function useChatSessions() {
   return useQuery({
     queryKey: chatQueryKeys.sessions(),
@@ -37,12 +37,12 @@ export function useChatSessions() {
         return [];
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes (was cacheTime)
+    staleTime: 1000 * 60 * 5, // 5분
+    gcTime: 1000 * 60 * 10, // 10분 (이전 cacheTime)
   });
 }
 
-// Get a specific chat session
+// 특정 채팅 세션 가져오기
 export function useChatSession(chatId: string | null) {
   return useQuery({
     queryKey: chatQueryKeys.session(chatId || ''),
@@ -69,12 +69,12 @@ export function useChatSession(chatId: string | null) {
       }
     },
     enabled: !!chatId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 5, // 5분
+    gcTime: 1000 * 60 * 10, // 10분
   });
 }
 
-// Search chat sessions
+// 채팅 세션 검색
 export function useSearchChatSessions(searchQuery: string) {
   const { data: sessions = [] } = useChatSessions();
   
@@ -92,12 +92,12 @@ export function useSearchChatSessions(searchQuery: string) {
       );
     },
     enabled: !!searchQuery,
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    gcTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 2, // 2분
+    gcTime: 1000 * 60 * 5, // 5분
   });
 }
 
-// Get messages for a specific chat
+// 특정 채팅의 메시지 가져오기
 export function useChatMessages(chatId: string | null) {
   return useQuery({
     queryKey: chatQueryKeys.messages(chatId || ''),
@@ -117,7 +117,7 @@ export function useChatMessages(chatId: string | null) {
       }
     },
     enabled: !!chatId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 5, // 5분
+    gcTime: 1000 * 60 * 10, // 10분
   });
 }

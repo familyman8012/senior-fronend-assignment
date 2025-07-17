@@ -9,13 +9,13 @@ export const queryClient = new QueryClient({
         return shouldRetry(error);
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (was cacheTime in v4)
+      staleTime: 5 * 60 * 1000, // 5분
+      gcTime: 10 * 60 * 1000, // 10분 (v4에서는 cacheTime이었음)
       refetchOnWindowFocus: false,
     },
     mutations: {
       retry: (failureCount, error) => {
-        // Mutations: retry up to 2 times for retryable errors
+        // 뮤테이션: 재시도 가능한 오류에 대해 최대 2번 재시도
         if (failureCount >= 2) return false;
         return shouldRetry(error);
       },

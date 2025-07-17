@@ -16,7 +16,7 @@ export const MessageInput = memo(function MessageInput({ onSendMessage, isLoadin
       onSendMessage(message.trim());
       setMessage('');
       
-      // Reset textarea height
+      // 텍스트 영역 높이 재설정
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }
@@ -32,7 +32,7 @@ export const MessageInput = memo(function MessageInput({ onSendMessage, isLoadin
 
   const handleInput = useCallback(() => {
     if (textareaRef.current) {
-      // Auto-resize textarea
+      // 텍스트 영역 자동 크기 조절
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
