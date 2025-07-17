@@ -25,7 +25,8 @@ describe('ContentRenderer 컴포넌트', () => {
     render(<ContentRenderer content={content} contentType="markdown" />);
     
     expect(screen.getByTestId('markdown-renderer')).toBeInTheDocument();
-    expect(screen.getByTestId('markdown-renderer')).toHaveTextContent(content);
+    // 모킹된 컴포넌트가 content를 그대로 렌더링하므로 정규화된 텍스트로 비교
+    expect(screen.getByTestId('markdown-renderer').textContent).toBe(content);
   });
 
   it('HTML 콘텐츠를 올바르게 렌더링해야 함', () => {
@@ -66,7 +67,7 @@ describe('ContentRenderer 컴포넌트', () => {
     );
     
     expect(screen.getByTestId('markdown-renderer')).toBeInTheDocument();
-    // 백그라운드 스타일이 적용되어야 함
+    // 백그라운드 스타일이 적용되어야 함 (markdown 타입이므로)
     expect(container.firstChild).toHaveClass('bg-white/50');
   });
 

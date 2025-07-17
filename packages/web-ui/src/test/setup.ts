@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeAll, afterAll, vi } from 'vitest';
+import { server } from './mocks/server';
 
 // 테스트 후 자동 정리
 afterEach(() => {
@@ -8,10 +9,12 @@ afterEach(() => {
   localStorage.clear();
   sessionStorage.clear();
   vi.clearAllMocks();
+  server.resetHandlers();
 });
 
 // 전역 모의 설정
 beforeAll(() => {
+  server.listen();
   // IntersectionObserver 모의
   global.IntersectionObserver = vi.fn().mockImplementation(() => ({
     observe: vi.fn(),
@@ -27,10 +30,14 @@ beforeAll(() => {
   }));
 
   // crypto.randomUUID 모의
-  global.crypto = {
-    ...global.crypto,
-    randomUUID: vi.fn(() => `test-uuid-${Math.random().toString(36).substr(2, 9)}`),
-  };
+  Object.defineProperty(global, 'crypto', {
+    value: {
+      ...global.crypto,
+      randomUUID: vi.fn(() => `test-uuid-${Math.random().toString(36).substr(2, 9)}`),
+    },
+    writable: true,
+    configurable: true,
+  });
 
   // navigator.onLine 모의
   Object.defineProperty(navigator, 'onLine', {
@@ -96,5 +103,6 @@ beforeAll(() => {
 });
 
 afterAll(() => {
+  server.close();
   vi.restoreAllMocks();
 });

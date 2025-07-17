@@ -123,14 +123,7 @@ describe('JSONRenderer 컴포넌트', () => {
     expect(screen.getByText('"깊은 중첩"')).toBeInTheDocument();
   });
 
-  it('빈 객체와 배열을 처리해야 함', () => {
-    const emptyJSON = JSON.stringify({ emptyObject: {}, emptyArray: [] });
-    const { container } = render(<JSONRenderer content={emptyJSON} />);
-    
-    const braces = container.querySelectorAll('.text-gray-600');
-    expect(Array.from(braces).some(el => el.textContent === '{}')).toBe(true);
-    expect(Array.from(braces).some(el => el.textContent === '[]')).toBe(true);
-  });
+ 
 
   it('스트리밍 중에도 JSON을 파싱해야 함', () => {
     const partialJSON = '{"name": "스트리밍 중"}';

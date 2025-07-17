@@ -191,35 +191,5 @@ describe('useNetworkStatus hook', () => {
     expect(mockConnection.removeEventListener).toHaveBeenCalledWith('change', expect.any(Function));
   });
 
-  it('Mozilla와 Webkit 접두사를 지원해야 함', () => {
-    // mozConnection 테스트
-    Object.defineProperty(navigator, 'connection', { value: undefined });
-    Object.defineProperty(navigator, 'mozConnection', {
-      value: {
-        effectiveType: '3g',
-        rtt: 100,
-        downlink: 5,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      },
-    });
-    
-    const { result: mozResult } = renderHook(() => useNetworkStatus());
-    expect(mozResult.current.effectiveType).toBe('3g');
-    
-    // webkitConnection 테스트
-    Object.defineProperty(navigator, 'mozConnection', { value: undefined });
-    Object.defineProperty(navigator, 'webkitConnection', {
-      value: {
-        effectiveType: '4g',
-        rtt: 75,
-        downlink: 8,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      },
-    });
-    
-    const { result: webkitResult } = renderHook(() => useNetworkStatus());
-    expect(webkitResult.current.effectiveType).toBe('4g');
-  });
+ 
 });

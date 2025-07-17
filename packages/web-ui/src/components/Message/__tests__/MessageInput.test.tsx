@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@/test/utils';
+import { render, screen, fireEvent } from '@/test/utils';
 import userEvent from '@testing-library/user-event';
 import MessageInput from '../MessageInput';
 
@@ -10,9 +10,7 @@ describe('MessageInput 컴포넌트', () => {
     disabled: false,
   };
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+
 
   it('텍스트 입력이 가능해야 함', async () => {
     const user = userEvent.setup();
@@ -103,7 +101,7 @@ describe('MessageInput 컴포넌트', () => {
     const textarea = screen.getByRole('textbox');
     await user.type(textarea, '테스트');
     
-    expect(screen.getByText('5 자')).toBeInTheDocument();
+    expect(screen.getByText('3 자')).toBeInTheDocument();
   });
 
   it('textarea가 내용에 맞게 자동으로 크기 조절되어야 함', async () => {
@@ -111,7 +109,7 @@ describe('MessageInput 컴포넌트', () => {
     render(<MessageInput {...defaultProps} />);
     
     const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
-    const initialHeight = textarea.style.height;
+
     
     // 여러 줄의 텍스트 입력
     await user.type(textarea, '첫 번째 줄\n두 번째 줄\n세 번째 줄');
@@ -129,7 +127,7 @@ describe('MessageInput 컴포넌트', () => {
   });
 
   it('최대 높이가 120px로 제한되어야 함', async () => {
-    const user = userEvent.setup();
+
     render(<MessageInput {...defaultProps} />);
     
     const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;

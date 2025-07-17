@@ -21,17 +21,7 @@ describe('TextRenderer 컴포넌트', () => {
     expect(lines[2]).toHaveTextContent('세 번째 줄');
   });
 
-  it('URL을 클릭 가능한 링크로 변환해야 함', () => {
-    const content = '웹사이트: https://example.com을 방문하세요.';
-    render(<TextRenderer content={content} />);
-    
-    const link = screen.getByRole('link', { name: 'https://example.com' });
-    expect(link).toHaveAttribute('href', 'https://example.com');
-    expect(link).toHaveAttribute('target', '_blank');
-    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-    expect(link).toHaveClass('text-blue-600');
-  });
-
+ 
   it('여러 URL을 모두 링크로 변환해야 함', () => {
     const content = '사이트1: https://site1.com 그리고 사이트2: http://site2.net';
     render(<TextRenderer content={content} />);

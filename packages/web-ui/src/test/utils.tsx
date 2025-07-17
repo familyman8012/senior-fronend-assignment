@@ -1,7 +1,8 @@
 import { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import { render, RenderOptions, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { vi } from 'vitest';
 
 // 테스트용 QueryClient 생성
 export function createTestQueryClient() {
@@ -41,8 +42,14 @@ export function renderWithProviders(
     );
   }
 
+  let result: ReturnType<typeof render>;
+  
+  act(() => {
+    result = render(ui, { wrapper: Wrapper, ...renderOptions });
+  });
+
   return {
-    ...render(ui, { wrapper: Wrapper, ...renderOptions }),
+    ...result!,
     queryClient,
   };
 }
@@ -69,8 +76,10 @@ export function mockNetworkStatus(isOnline: boolean, connectionType?: string) {
     });
   }
 
-  // 이벤트 트리거
-  window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
+  // 이벤트 트리거 (act로 감싸기)
+  act(() => {
+    window.dispatchEvent(new Event(isOnline ? 'online' : 'offline'));
+  });
 }
 
 // localStorage 모의 헬퍼
@@ -126,11 +135,75 @@ export async function waitForAsync(ms = 0) {
 
 // 재렌더링 대기 헬퍼
 export async function waitForRerender() {
-  const { act } = await import('@testing-library/react');
   await act(async () => {
     await waitForAsync(0);
   });
 }
 
-export * from '@testing-library/react';
+// re-export everything from @testing-library/react except render
+export {
+  act,
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  waitForElementToBeRemoved,
+  within,
+  prettyDOM,
+  queries,
+  queryHelpers,
+  buildQueries,
+  configure,
+  getDefaultNormalizer,
+  getRoles,
+  getQueriesForElement,
+  isInaccessible,
+  logDOM,
+  logRoles,
+  prettyFormat,
+  createEvent,
+  getNodeText,
+  getConfig,
+  Config,
+  ConfigFn,
+} from '@testing-library/react';
+
+// Export our custom render as 'render'
+export { renderWithProviders as render };
+
+// Custom renderHook that uses QueryClientProvider
+export function renderHook<Result, Props>(
+  renderCallback: (props: Props) => Result,
+  options?: CustomRenderOptions & { initialProps?: Props }
+) {
+  const { queryClient = createTestQueryClient(), initialProps, ...renderOptions } = options || {};
+
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+      </QueryClientProvider>
+    );
+  }
+
+  const { renderHook: originalRenderHook } = require('@testing-library/react');
+  
+  let result: ReturnType<typeof originalRenderHook>;
+  
+  act(() => {
+    result = originalRenderHook(renderCallback, { 
+      wrapper: Wrapper, 
+      initialProps,
+      ...renderOptions 
+    });
+  });
+
+  return {
+    ...result!,
+    queryClient,
+  };
+}
+
 export { userEvent } from '@testing-library/user-event';

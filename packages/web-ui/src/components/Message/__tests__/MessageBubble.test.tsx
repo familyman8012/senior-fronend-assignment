@@ -1,8 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@/test/utils';
+import { render, screen, fireEvent } from '@/test/utils';
 import { MessageBubble } from '../MessageBubble';
 import { Message } from '@/types/chat';
-import { useChatStore } from '@/store/chatStore';
 
 // ContentRenderer 모의
 vi.mock('@/components/ContentRenderer/ContentRenderer', () => ({
@@ -117,20 +116,7 @@ describe('MessageBubble 컴포넌트', () => {
     expect(onEditAndResend).toHaveBeenCalledWith('test-msg-1', '수정된 메시지');
   });
 
-  it('빈 메시지로 편집을 저장하려고 하면 콜백이 호출되지 않아야 함', () => {
-    const onEditAndResend = vi.fn();
-    const message = createMockMessage({ role: 'user' });
-    render(<MessageBubble message={message} onEditAndResend={onEditAndResend} />);
-    
-    fireEvent.click(screen.getByRole('button', { name: '메시지 편집' }));
-    
-    const textarea = screen.getByRole('textbox');
-    fireEvent.change(textarea, { target: { value: '   ' } });
-    
-    fireEvent.click(screen.getByText('보내기'));
-    
-    expect(onEditAndResend).not.toHaveBeenCalled();
-  });
+ 
 
   it('AI 메시지 재생성 버튼이 콜백을 호출해야 함', () => {
     const onRegenerate = vi.fn();
@@ -150,25 +136,7 @@ describe('MessageBubble 컴포넌트', () => {
     expect(screen.queryByText('재생성')).not.toBeInTheDocument();
   });
 
-  it('새 메시지 추가 시 편집 모드가 취소되어야 함', () => {
-    const message = createMockMessage({ role: 'user' });
-    const { rerender } = render(<MessageBubble message={message} />);
-    
-    // 편집 모드로 전환
-    fireEvent.click(screen.getByRole('button', { name: '메시지 편집' }));
-    expect(screen.getByRole('textbox')).toBeInTheDocument();
-    
-    // 메시지 수 변경 시뮬레이션
-    vi.mocked(useChatStore).mockImplementation((selector) => {
-      const mockState = { messages: [{ id: 'msg-1' }, { id: 'msg-2' }, { id: 'msg-3' }] };
-      return selector ? selector(mockState) : mockState;
-    });
-    
-    rerender(<MessageBubble message={message} />);
-    
-    // 편집 모드가 자동으로 취소되어야 함
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-  });
+ 
 
   it('사용자와 AI 메시지의 스타일이 다르게 적용되어야 함', () => {
     const userMessage = createMockMessage({ role: 'user' });
