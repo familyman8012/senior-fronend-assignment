@@ -43,7 +43,7 @@ export const OfflineIndicator = memo(() => {
       </svg>
       <span>
         {!isOnline 
-          ? '오프라인 상태입니다. 네트워크 연결을 확인해주세요.' 
+          ? '오프라인 모드: 저장된 대화만 볼 수 있습니다.' 
           : `느린 연결 (${effectiveType})`}
       </span>
     </div>
