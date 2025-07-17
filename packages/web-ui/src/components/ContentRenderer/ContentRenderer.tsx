@@ -1,11 +1,15 @@
-import { lazy, Suspense, memo } from 'react';
+import { memo } from 'react';
 import { ContentType } from '@/types/chat';
+import { MarkdownRenderer } from './MarkdownRenderer';
+import { HTMLRenderer } from './HTMLRenderer';
+import { JSONRenderer } from './JSONRenderer';
+import { TextRenderer } from './TextRenderer';
 
 const contentRenderers = {
-  markdown: lazy(() => import('./MarkdownRenderer').then(m => ({ default: m.MarkdownRenderer }))),
-  html: lazy(() => import('./HTMLRenderer').then(m => ({ default: m.HTMLRenderer }))),
-  json: lazy(() => import('./JSONRenderer').then(m => ({ default: m.JSONRenderer }))),
-  text: lazy(() => import('./TextRenderer').then(m => ({ default: m.TextRenderer })))
+  markdown: MarkdownRenderer,
+  html: HTMLRenderer,
+  json: JSONRenderer,
+  text: TextRenderer
 } as const;
 
 interface ContentRendererProps {
@@ -20,10 +24,8 @@ export const ContentRenderer = memo(({ content, contentType, isStreaming }: Cont
   const needsBackground = contentType === 'markdown' || contentType === 'html';
   
   return (
-    <Suspense fallback={<div className="animate-pulse text-gray-400">Loading...</div>}>
-      <div className={needsBackground ? 'bg-white/50 rounded-lg p-4 -mx-2' : ''}>
-        <Renderer content={content} isStreaming={isStreaming} />
-      </div>
-    </Suspense>
+    <div className={needsBackground ? 'bg-white/50 rounded-lg p-4 -mx-2' : ''}>
+      <Renderer content={content} isStreaming={isStreaming} />
+    </div>
   );
 });
