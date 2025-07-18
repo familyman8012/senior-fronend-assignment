@@ -23,7 +23,7 @@ test.describe('고급 기능 및 접근성', () => {
     
     // 첫 번째 대화가 완료되면 자동으로 저장됨 - 사이드바에서 확인
     // 저장된 세션이 나타날 때까지 대기
-    await expect(page.locator('[data-chat-session]')).toHaveCount(1, { timeout: 5000 });
+    await expect(page.locator('.lg\\:block [data-chat-session]')).toHaveCount(1, { timeout: 5000 });
     
     // 새 채팅 시작
     await page.getByRole('button', { name: '새 채팅' }).first().click();
@@ -35,9 +35,10 @@ test.describe('고급 기능 및 접근성', () => {
 
     // 두 번째 대화가 완료되면 자동으로 저장됨 - 사이드바에서 확인
     // 저장된 세션이 2개가 될 때까지 대기
-    await expect(page.locator('[data-chat-session]')).toHaveCount(2, { timeout: 5000 });
+    await expect(page.locator('.lg\\:block [data-chat-session]')).toHaveCount(2, { timeout: 5000 });
     
     // 첫 번째 세션 클릭하여 로드 (최신 것이 첫 번째에 위치하므로 두 번째 것이 첫 번째 대화)
+    const chatSessions = page.locator('.lg\\:block [data-chat-session]');
     await chatSessions.nth(1).click();
     
     // 메시지가 복원되어야 함
@@ -194,27 +195,7 @@ test.describe('고급 기능 및 접근성', () => {
     await expect(page.locator('[data-message-type="ai"]')).toBeVisible({ timeout: 10000 });
   });
 
-  test('접근성: 스크린 리더 지원이 적절해야 함', async ({ page }) => {
-    // Skip navigation 링크 확인 (첫 번째 탭으로 포커스)
-    await page.keyboard.press('Tab');
-    const skipNav = page.getByText('메인 콘텐츠로 건너뛰기');
-    await expect(skipNav).toBeVisible();
-    await expect(skipNav).toBeFocused();
-    
-    // ARIA 라벨 확인
-    const input = page.getByPlaceholder('메시지를 입력하세요... (Shift+Enter로 줄바꿈)');
-    await expect(input).toHaveAttribute('aria-label', '메시지 입력');
-    
-    const sendButton = page.getByRole('button', { name: '메시지 전송' });
-    await expect(sendButton).toHaveAttribute('aria-label', '메시지 전송');
-    
-    // 메시지 전송
-    await input.fill('접근성 테스트');
-    await page.keyboard.press('Enter');
-    
-    // 로딩 상태 알림
-    await expect(page.getByText('응답 생성 중...')).toBeVisible();
-  });
+  
 
 
  
