@@ -154,45 +154,40 @@ test.describe('고급 기능 및 접근성', () => {
 
  
 
-  test('다크 모드 지원 (시스템 설정 따라감)', async ({ page, browser }) => {
-    // 다크 모드 컨텍스트 생성
-    const context = await browser.newContext({
-      colorScheme: 'dark'
-    });
-    const darkPage = await context.newPage();
+  test('다크 모드 지원 (토글 버튼으로 전환)', async ({ page }) => {
+    // 초기 상태는 라이트 모드
+    const initialClasses = await page.evaluate(() => document.documentElement.className);
+    expect(initialClasses).not.toContain('dark');
     
-    await darkPage.goto('/');
-    await darkPage.waitForLoadState('networkidle');
+    // 다크 모드 토글 버튼 찾기 (해/달 아이콘)
+    const darkModeToggle = page.getByRole('button', { name: /Switch to dark mode/i });
+    await expect(darkModeToggle).toBeVisible();
     
-    // matchMedia가 dark 모드를 반환하는지 확인
-    const isDarkMode = await darkPage.evaluate(() => 
-      window.matchMedia('(prefers-color-scheme: dark)').matches
-    );
-    expect(isDarkMode).toBe(true);
+    // 다크 모드로 전환
+    await darkModeToggle.click();
     
     // HTML에 dark 클래스가 적용되었는지 확인
-    const htmlClasses = await darkPage.evaluate(() => document.documentElement.className);
-    expect(htmlClasses).toContain('dark');
+    const darkClasses = await page.evaluate(() => document.documentElement.className);
+    expect(darkClasses).toContain('dark');
     
     // 다크 모드 배경색이 적용되었는지 확인
-    const darkBackground = await darkPage.locator('.dark\\:bg-gray-900').first();
-    await expect(darkBackground).toBeVisible();
+    const darkBackground = page.locator('.dark\\:bg-gray-900');
+    await expect(darkBackground.first()).toBeVisible();
     
-    // 라이트 모드와 비교
-    const lightContext = await browser.newContext({
-      colorScheme: 'light'
-    });
-    const lightPage = await lightContext.newPage();
-    await lightPage.goto('/');
-    await lightPage.waitForLoadState('networkidle');
+    // 토글 버튼 아이콘이 변경되었는지 확인 (라이트 모드로 전환 버튼)
+    const lightModeToggle = page.getByRole('button', { name: /Switch to light mode/i });
+    await expect(lightModeToggle).toBeVisible();
     
-    const isLightMode = await lightPage.evaluate(() => 
-      window.matchMedia('(prefers-color-scheme: light)').matches
-    );
-    expect(isLightMode).toBe(true);
+    // 라이트 모드로 다시 전환
+    await lightModeToggle.click();
     
-    await context.close();
-    await lightContext.close();
+    // dark 클래스가 제거되었는지 확인
+    const lightClasses = await page.evaluate(() => document.documentElement.className);
+    expect(lightClasses).not.toContain('dark');
+    
+    // localStorage에 설정이 저장되었는지 확인
+    const savedTheme = await page.evaluate(() => localStorage.getItem('darkMode'));
+    expect(savedTheme).toBe('false');
   });
 
 });

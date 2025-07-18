@@ -161,4 +161,31 @@ test.describe('에러 처리 및 재시도', () => {
     await expect(input).not.toBeDisabled();
   });
 
+  
+
+
+
+  test('접근성: 에러 메시지가 스크린 리더에 전달되어야 함', async ({ page, context }) => {
+    // 네트워크 오류 시뮬레이션
+    await context.route('**/v1/chat/completions', route => {
+      route.abort('failed');
+    });
+    
+    const input = page.getByPlaceholder('메시지를 입력하세요... (Shift+Enter로 줄바꿈)');
+    
+    // 메시지 전송
+    await input.fill('접근성 테스트');
+    await page.keyboard.press('Enter');
+    
+    // 에러 메시지가 alert role을 가져야 함
+    const alert = page.getByRole('alert');
+    await expect(alert).toBeVisible();
+    await expect(alert).toContainText('오류가 발생했습니다');
+    
+    // 재시도 버튼이 포커스 가능해야 함
+    const retryButton = page.getByText('다시 시도');
+    await expect(retryButton).toBeVisible();
+    await retryButton.focus();
+    await expect(retryButton).toBeFocused();
+  });
 });
