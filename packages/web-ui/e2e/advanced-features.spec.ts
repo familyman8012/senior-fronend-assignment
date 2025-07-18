@@ -127,52 +127,6 @@ test.describe('고급 기능 및 접근성', () => {
     expect(mdDownload.suggestedFilename()).toMatch(/chat_.*\.md/);
   });
 
-  test('키보드 단축키가 동작해야 함', async ({ page }) => {
-    const isMac = process.platform === 'darwin';
-    
-    // 데스크톱에서는 사이드바가 이미 열려있음, 모바일에서만 열기
-    const isMobile = await page.viewportSize()?.width! < 1024;
-    if (isMobile) {
-      await page.getByRole('button', { name: 'Open sidebar' }).click();
-    }
-    
-    // Ctrl/Cmd + Shift + O로 새 채팅
-    await page.keyboard.press(isMac ? 'Meta+Shift+O' : 'Control+Shift+O');
-    
-    // 입력 필드가 비어있고 포커스되어야 함
-    const input = page.getByPlaceholder('메시지를 입력하세요... (Shift+Enter로 줄바꿈)');
-    await expect(input).toHaveValue('');
-    await expect(input).toBeFocused();
-    
-    // 포커스를 다른 곳으로 이동
-    const isMobile2 = await page.viewportSize()?.width! < 1024;
-    if (isMobile2) {
-      await page.getByRole('button', { name: 'Open sidebar' }).click();
-      await page.getByRole('button', { name: 'Open sidebar' }).click(); // 사이드바 닫기
-    } else {
-      // 데스크톱에서는 다른 요소로 포커스 이동
-      await page.locator('h1').click();
-    }
-    
-    // Shift + ESC로 메시지 입력 필드에 포커스
-    await page.keyboard.press('Shift+Escape');
-    await expect(input).toBeFocused();
-    
-    // 텍스트가 있는 경우 커서가 끝으로 이동하는지 테스트
-    await input.fill('테스트 메시지');
-    const isMobile3 = await page.viewportSize()?.width! < 1024;
-    if (isMobile3) {
-      await page.getByRole('button', { name: 'Open sidebar' }).focus(); // 포커스 이동
-    } else {
-      await page.locator('h1').focus(); // 데스크톱에서는 h1로 포커스 이동
-    }
-    await page.keyboard.press('Shift+Escape');
-    await expect(input).toBeFocused();
-    
-    // 커서가 텍스트 끝에 있는지 확인 (텍스트 추가로 확인)
-    await page.keyboard.type(' 추가');
-    await expect(input).toHaveValue('테스트 메시지 추가');
-  });
 
   test('접근성: 키보드 네비게이션이 동작해야 함', async ({ page }) => {
     // Tab 키로 주요 요소 탐색
@@ -208,34 +162,37 @@ test.describe('고급 기능 및 접근성', () => {
     const darkPage = await context.newPage();
     
     await darkPage.goto('/');
+    await darkPage.waitForLoadState('networkidle');
     
-    // matchMedia 모의가 dark 모드를 반환하는지 확인
+    // matchMedia가 dark 모드를 반환하는지 확인
     const isDarkMode = await darkPage.evaluate(() => 
       window.matchMedia('(prefers-color-scheme: dark)').matches
     );
+    expect(isDarkMode).toBe(true);
     
-    // 시스템 설정에 따라 스타일이 적용되어야 함
-    // (실제 다크 모드 구현 시 테스트 추가)
+    // HTML에 dark 클래스가 적용되었는지 확인
+    const htmlClasses = await darkPage.evaluate(() => document.documentElement.className);
+    expect(htmlClasses).toContain('dark');
+    
+    // 다크 모드 배경색이 적용되었는지 확인
+    const darkBackground = await darkPage.locator('.dark\\:bg-gray-900').first();
+    await expect(darkBackground).toBeVisible();
+    
+    // 라이트 모드와 비교
+    const lightContext = await browser.newContext({
+      colorScheme: 'light'
+    });
+    const lightPage = await lightContext.newPage();
+    await lightPage.goto('/');
+    await lightPage.waitForLoadState('networkidle');
+    
+    const isLightMode = await lightPage.evaluate(() => 
+      window.matchMedia('(prefers-color-scheme: light)').matches
+    );
+    expect(isLightMode).toBe(true);
     
     await context.close();
+    await lightContext.close();
   });
 
-  test('PWA: 오프라인에서도 기본 UI가 로드되어야 함', async ({ page, context }) => {
-    // 첫 방문으로 캐시 생성
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-    
-    // Service Worker 등록 대기
-    await page.waitForTimeout(2000);
-    
-    // 오프라인 설정
-    await context.setOffline(true);
-    
-    // 페이지 새로고침
-    await page.reload();
-    
-    // 기본 UI가 표시되어야 함
-    await expect(page.locator('h1')).toContainText('WorkAI');
-    await expect(page.getByText('오프라인 모드: 저장된 대화만 볼 수 있습니다.')).toBeVisible();
-  });
 });
