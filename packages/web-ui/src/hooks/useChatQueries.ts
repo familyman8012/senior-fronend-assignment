@@ -34,8 +34,8 @@ export function useChatSessions() {
         return [];
       }
     },
-    staleTime: 1000 * 60 * 5, // 5분
-    gcTime: 1000 * 60 * 10, // 10분 (이전 cacheTime)
+    staleTime: import.meta.env.NODE_ENV === 'test' ? 0 : 1000 * 60 * 5, // 테스트 환경에서는 0, 그 외에는 5분
+    gcTime: import.meta.env.NODE_ENV === 'test' ? 0 : 1000 * 60 * 10, // 테스트 환경에서는 0, 그 외에는 10분
   });
 }
 
@@ -63,8 +63,8 @@ export function useChatSession(chatId: string | null) {
       }
     },
     enabled: !!chatId,
-    staleTime: 1000 * 60 * 5, // 5분
-    gcTime: 1000 * 60 * 10, // 10분
+    staleTime: import.meta.env.NODE_ENV === 'test' ? 0 : 1000 * 60 * 5, // 테스트 환경에서는 0, 그 외에는 5분
+    gcTime: import.meta.env.NODE_ENV === 'test' ? 0 : 1000 * 60 * 10, // 테스트 환경에서는 0, 그 외에는 10분
   });
 }
 
@@ -86,8 +86,8 @@ export function useSearchChatSessions(searchQuery: string) {
       );
     },
     enabled: !!searchQuery,
-    staleTime: 1000 * 60 * 2, // 2분
-    gcTime: 1000 * 60 * 5, // 5분
+    staleTime: import.meta.env.NODE_ENV === 'test' ? 0 : 1000 * 60 * 2, // 테스트 환경에서는 0, 그 외에는 2분
+    gcTime: import.meta.env.NODE_ENV === 'test' ? 0 : 1000 * 60 * 5, // 테스트 환경에서는 0, 그 외에는 5분
   });
 }
 
@@ -111,7 +111,7 @@ export function useChatMessages(chatId: string | null) {
       }
     },
     enabled: !!chatId,
-    staleTime: 1000 * 60 * 5, // 5분
-    gcTime: 1000 * 60 * 10, // 10분
+    staleTime: import.meta.env.NODE_ENV === 'test' ? 0 : 1000 * 60 * 5, // 테스트 환경에서는 0, 그 외에는 5분
+    gcTime: import.meta.env.NODE_ENV === 'test' ? 0 : 1000 * 60 * 10, // 테스트 환경에서는 0, 그 외에는 10분
   });
 }

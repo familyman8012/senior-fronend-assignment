@@ -84,8 +84,18 @@ export function mockNetworkStatus(isOnline: boolean, connectionType?: string) {
 
 // localStorage 모의 헬퍼
 export function mockLocalStorage(data: Record<string, any>) {
+  // localStorage 모킹 객체에 직접 접근
+  const mockStorage = localStorage as any;
+  
   Object.entries(data).forEach(([key, value]) => {
-    localStorage.setItem(key, JSON.stringify(value));
+    // 값이 이미 문자열인지 확인
+    const serializedValue = typeof value === 'string' ? value : JSON.stringify(value);
+    mockStorage.store[key] = serializedValue;
+  });
+  
+  // getItem 호출 시 올바른 값을 반환하도록 설정 (루프 밖으로 이동)
+  mockStorage.getItem.mockImplementation((k: string) => {
+    return mockStorage.store[k] || null;
   });
 }
 
@@ -138,6 +148,11 @@ export async function waitForRerender() {
   await act(async () => {
     await waitForAsync(0);
   });
+}
+
+// React Query에 초기 데이터 설정 헬퍼
+export function setInitialQueryData(queryClient: any, key: string[], data: any) {
+  queryClient.setQueryData(key, data);
 }
 
 // re-export everything from @testing-library/react except render

@@ -100,6 +100,52 @@ beforeAll(() => {
       ready: Promise.resolve({}),
     },
   });
+
+  // localStorage 모킹 (테스트 환경에서 확실히 동작하도록)
+  const localStorageMock = {
+    store: {} as Record<string, string>,
+    getItem: vi.fn((key: string) => localStorageMock.store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
+      localStorageMock.store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete localStorageMock.store[key];
+    }),
+    clear: vi.fn(() => {
+      localStorageMock.store = {};
+    }),
+    length: 0,
+    key: vi.fn(() => null),
+  };
+
+  Object.defineProperty(global, 'localStorage', {
+    value: localStorageMock,
+    writable: true,
+    configurable: true,
+  });
+
+  // sessionStorage도 같은 방식으로 모킹
+  const sessionStorageMock = {
+    store: {} as Record<string, string>,
+    getItem: vi.fn((key: string) => sessionStorageMock.store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
+      sessionStorageMock.store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete sessionStorageMock.store[key];
+    }),
+    clear: vi.fn(() => {
+      sessionStorageMock.store = {};
+    }),
+    length: 0,
+    key: vi.fn(() => null),
+  };
+
+  Object.defineProperty(global, 'sessionStorage', {
+    value: sessionStorageMock,
+    writable: true,
+    configurable: true,
+  });
 });
 
 afterAll(() => {

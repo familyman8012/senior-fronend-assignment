@@ -4,7 +4,10 @@
       "Bash(mkdir:*)",
       "Bash(pnpm install:*)",
       "Bash(pnpm list:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(timeout 60 npx vitest run src/test/integration/offlineMode.test.tsx --reporter=verbose)",
+      "Bash(timeout 30 npx vitest run src/test/integration/offlineMode.test.tsx --reporter=verbose)",
+      "Bash(npx vitest run:*)"
     ],
     "deny": []
   }
