@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 interface ThemeContextType {
   isDarkMode: boolean;
@@ -9,34 +9,42 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    const initialDarkMode = saved ? JSON.parse(saved) : false;
+    if (typeof window === 'undefined') return false;
     
-    // 초기 로드 시 즉시 클래스 적용
-    if (initialDarkMode) {
-      document.documentElement.classList.add('dark');
+    try {
+      const saved = localStorage.getItem('darkMode');
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
+  
+  // Apply theme to DOM
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    if (isDarkMode) {
+      root.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
     }
     
-    return initialDarkMode;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    // Always update localStorage
+    try {
+      localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+    } catch (error) {
+      console.error('Error saving theme:', error);
     }
   }, [isDarkMode]);
 
-  const toggleTheme = () => {
-    setIsDarkMode((prev: boolean) => !prev);
-  };
+  const toggleTheme = useCallback(() => {
+    setIsDarkMode(prev => !prev);
+  }, []);
+
+  const value = React.useMemo(() => ({ isDarkMode, toggleTheme }), [isDarkMode, toggleTheme]);
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

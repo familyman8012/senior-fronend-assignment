@@ -27,19 +27,58 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css" />
     
     <title>AI Chat Interface</title>
+    <script>
+      // 테마 플래시 방지를 위한 즉시 실행 스크립트
+      (function() {
+        try {
+          const darkMode = localStorage.getItem('darkMode');
+          if (darkMode === 'true') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {
+          // localStorage가 사용 불가능한 경우 무시
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root">
       <!-- Loading state while React initializes -->
-      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f9fafb;">
+      <div class="loading-container" style="display: flex; justify-content: center; align-items: center; height: 100vh;">
         <div style="text-align: center;">
-          <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-          <p style="margin-top: 16px; color: #6b7280; font-family: system-ui, -apple-system, sans-serif;">로딩 중...</p>
+          <div class="spinner" style="width: 40px; height: 40px; border: 3px solid; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+          <p class="loading-text" style="margin-top: 16px; font-family: system-ui, -apple-system, sans-serif;">로딩 중...</p>
         </div>
       </div>
       <style>
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        
+        /* Light mode (default) */
+        .loading-container {
+          background-color: #f9fafb;
+        }
+        .spinner {
+          border-color: #e5e7eb;
+          border-top-color: #3b82f6;
+        }
+        .loading-text {
+          color: #6b7280;
+        }
+        
+        /* Dark mode */
+        .dark .loading-container {
+          background-color: #111827;
+        }
+        .dark .spinner {
+          border-color: #374151;
+          border-top-color: #60a5fa;
+        }
+        .dark .loading-text {
+          color: #9ca3af;
         }
       </style>
     </div>

@@ -24,7 +24,8 @@ export const ContentRenderer = memo(({ content, contentType, isStreaming }: Cont
   const needsBackground = contentType === 'markdown' || contentType === 'html';
   
   return (
-    <div className={needsBackground ? 'bg-white/50 rounded-lg p-4 -mx-2' : ''}>
+    <div className={needsBackground ? 'relative rounded-xl p-5 -mx-2 bg-gray-100/90 dark:bg-gray-700/20 ring-1 ring-gray-300/50 dark:ring-gray-600/30 shadow-sm' : ''}>
+      <div className="relative">
         <Renderer content={content} isStreaming={isStreaming} />
       </div>
     </div>
