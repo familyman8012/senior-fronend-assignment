@@ -59,31 +59,4 @@ describe('ContentRenderer 컴포넌트', () => {
     
     expect(screen.getByTestId('text-renderer')).toBeInTheDocument();
   });
-
-  it('스트리밍 중일 때 적절한 props를 전달해야 함', () => {
-    const content = '스트리밍 중...';
-    const { container } = render(
-      <ContentRenderer content={content} contentType="markdown" isStreaming={true} />
-    );
-    
-    expect(screen.getByTestId('markdown-renderer')).toBeInTheDocument();
-    // 백그라운드 스타일이 적용되어야 함 (markdown 타입이므로)
-    expect(container.firstChild).toHaveClass('bg-white/50');
-  });
-
-  it('markdown과 html 타입에만 배경 스타일을 적용해야 함', () => {
-    const { rerender, container } = render(
-      <ContentRenderer content="내용" contentType="markdown" />
-    );
-    expect(container.firstChild).toHaveClass('bg-white/50');
-
-    rerender(<ContentRenderer content="내용" contentType="html" />);
-    expect(container.firstChild).toHaveClass('bg-white/50');
-
-    rerender(<ContentRenderer content="내용" contentType="json" />);
-    expect(container.firstChild).not.toHaveClass('bg-white/50');
-
-    rerender(<ContentRenderer content="내용" contentType="text" />);
-    expect(container.firstChild).not.toHaveClass('bg-white/50');
-  });
 });

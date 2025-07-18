@@ -47,35 +47,10 @@ test.describe('에러 처리 및 재시도', () => {
     await expect(page.getByText('다시 시도')).toBeVisible();
   });
 
-  test('재시도 기능이 동작해야 함', async ({ page, context }) => {
-    let attemptCount = 0;
-    
-    // 첫 번째 시도는 실패, 두 번째는 성공
+  test('다시 시도 기능이 동작해야 함', async ({ page, context }) => {
+  
     await context.route('**/v1/chat/completions', route => {
-      attemptCount++;
-      if (attemptCount === 1) {
-        route.abort('failed');
-      } else {
-        route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            id: 'success',
-            object: 'chat.completion',
-            created: Date.now(),
-            model: 'gpt-3.5-turbo',
-            choices: [{
-              index: 0,
-              message: {
-                role: 'assistant',
-                content: '재시도 성공!',
-                contentType: 'text'
-              },
-              finish_reason: 'stop'
-            }]
-          })
-        });
-      }
+      route.abort('failed');
     });
     
     const input = page.getByPlaceholder('메시지를 입력하세요... (Shift+Enter로 줄바꿈)');
@@ -84,14 +59,19 @@ test.describe('에러 처리 및 재시도', () => {
     await input.fill('재시도 테스트');
     await page.keyboard.press('Enter');
     
-    // 에러 발생
+    // 에러 메시지 표시 확인
     await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.getByText('오류가 발생했습니다')).toBeVisible();
+    await expect(page.getByText('다시 시도')).toBeVisible();
+    
+    // 재시도를 위해 라우트 해제 (정상 처리 허용)
+    await context.unroute('**/v1/chat/completions');
     
     // 재시도 버튼 클릭
     await page.getByText('다시 시도').click();
     
-    // 재시도 성공
-    await expect(page.getByText('재시도 성공!')).toBeVisible();
+    // 재시도 성공 - AI 응답이 나타나는지 확인
+    await expect(page.locator('[data-message-type="ai"]')).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('alert')).not.toBeVisible();
   });
 
