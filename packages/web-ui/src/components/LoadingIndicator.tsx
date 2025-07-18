@@ -5,7 +5,7 @@ interface LoadingIndicatorProps {
   color?: string;
 }
 
-export const LoadingIndicator = memo(({ size = 'md', color = 'text-blue-600' }: LoadingIndicatorProps) => {
+export const LoadingIndicator = memo(({ size = 'md', color = 'text-blue-600 dark:text-blue-400' }: LoadingIndicatorProps) => {
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-6 w-6',

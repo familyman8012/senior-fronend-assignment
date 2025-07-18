@@ -46,7 +46,7 @@ export const HTMLRenderer = memo(({ content, isStreaming = false }: HTMLRenderer
 
   return (
     <div 
-      className="html-content prose prose-sm max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2"
+      className="html-content prose prose-sm dark:prose-invert max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2"
       dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
     />
   );

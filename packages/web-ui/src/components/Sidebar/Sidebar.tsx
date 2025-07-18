@@ -168,7 +168,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
       {/* 모바일 백드롭 */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-40 lg:hidden"
           onClick={onClose}
         />
       )}
@@ -176,7 +176,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
       {/* 사이드바 */}
       <div
         className={clsx(
-          'fixed lg:sticky lg:top-0 inset-y-0 lg:inset-y-auto left-0 z-50 w-64 bg-gray-50 transform transition-transform duration-300 ease-in-out flex flex-col lg:h-screen',
+          'fixed lg:sticky lg:top-0 inset-y-0 lg:inset-y-auto left-0 z-50 w-64 bg-gray-50 dark:bg-gray-900 transform transition-transform duration-300 ease-in-out flex flex-col lg:h-screen',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
@@ -187,12 +187,12 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
               <div className="w-8 h-8  flex items-center justify-center text-xs text-gray-500">
                 <img src="https://images.squarespace-cdn.com/content/v1/607fd5bb9a059244d6b47125/edb4a6bd-bc22-4dc3-af79-a279c318bbc4/favicon.ico" alt="logo" className="w-8 h-8" />
               </div>
-              <span className="text-gray-900 font-medium">nextchapter</span>
+              <span className="text-gray-900 dark:text-gray-100 font-medium">nextchapter</span>
             </div>
             {/* 모바일 닫기 버튼 */}
             <button
               onClick={onClose}
-              className="lg:hidden p-1 hover:bg-gray-200 rounded text-gray-600"
+              className="lg:hidden p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400"
               aria-label="닫기"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,7 +203,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
 
           <button
             onClick={saveCurrentSession}
-            className="group w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-200 focus:bg-gray-200 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+            className="group w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 focus:bg-gray-200 dark:focus:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-inset"
           >
             <div className="flex items-center space-x-3">
               <div className="w-5 h-5 flex items-center justify-center text-xs">
@@ -226,7 +226,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
             placeholder={`대화 검색 (${isMac ? 'Cmd' : 'Ctrl'}+K)`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3 py-2 bg-white text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
             tabIndex={0}
           />
         </div>
@@ -235,7 +235,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <div className="space-y-2">
             {sessions.length === 0 ? (
-              <p className="text-gray-500 text-center py-8 text-sm">저장된 대화가 없습니다</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8 text-sm">저장된 대화가 없습니다</p>
             ) : (
               sessions.map(session => (
                 <div
@@ -243,10 +243,10 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
                   className={clsx(
                     'group relative rounded-lg transition-colors cursor-pointer px-3 py-2',
                     currentChatId === session.id
-                      ? 'bg-gray-200'
+                      ? 'bg-gray-200 dark:bg-gray-800'
                       : selectedSessionId === session.id
-                      ? 'bg-gray-200'
-                      : 'hover:bg-gray-100 focus-within:bg-gray-100'
+                      ? 'bg-gray-200 dark:bg-gray-800'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-800 focus-within:bg-gray-100 dark:focus-within:bg-gray-800'
                   )}
                   tabIndex={0}
                   role="button"
@@ -261,8 +261,8 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
                   onBlur={() => setFocusedSessionId(null)}
                 >
                   <div>
-                    <h3 className="text-sm text-gray-900 truncate pr-8">{session.title}</h3>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <h3 className="text-sm text-gray-900 dark:text-gray-100 truncate pr-8">{session.title}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {new Date(session.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -274,7 +274,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
                         e.stopPropagation();
                         exportSession(session, 'json');
                       }}
-                      className="p-1 hover:bg-gray-300 focus:bg-gray-300 rounded text-gray-600 hover:text-gray-900 focus:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+                      className="p-1 hover:bg-gray-300 dark:hover:bg-gray-700 focus:bg-gray-300 dark:focus:bg-gray-700 rounded text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 focus:text-gray-900 dark:focus:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-inset"
                       aria-label="JSON으로 내보내기"
                       tabIndex={focusedSessionId === session.id ? 0 : -1}
                     >
@@ -288,7 +288,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
                         e.stopPropagation();
                         exportSession(session, 'markdown');
                       }}
-                      className="p-1 hover:bg-gray-300 focus:bg-gray-300 rounded text-gray-600 hover:text-gray-900 focus:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+                      className="p-1 hover:bg-gray-300 dark:hover:bg-gray-700 focus:bg-gray-300 dark:focus:bg-gray-700 rounded text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 focus:text-gray-900 dark:focus:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-inset"
                       aria-label="Markdown으로 내보내기"
                       tabIndex={focusedSessionId === session.id ? 0 : -1}
                     >
@@ -302,7 +302,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
                         e.stopPropagation();
                         deleteSession(session.id);
                       }}
-                      className="p-1 hover:bg-red-100 focus:bg-red-100 rounded text-red-600 hover:text-red-700 focus:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-inset"
+                      className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 focus:bg-red-100 dark:focus:bg-red-900/20 rounded text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 focus:text-red-700 dark:focus:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:ring-inset"
                       aria-label="삭제"
                       tabIndex={focusedSessionId === session.id ? 0 : -1}
                     >

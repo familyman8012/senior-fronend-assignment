@@ -73,7 +73,7 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
       <div
         className={clsx(
           'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white font-medium',
-          isUser ? 'bg-blue-600' : 'bg-gray-600'
+          isUser ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-600 dark:bg-gray-500'
         )}
       >
         {isUser ? 'U' : 'AI'}
@@ -83,7 +83,7 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
         <div
           className={clsx(
             'rounded-lg px-4 py-3',
-            isUser ? 'bg-chat-user ml-auto text-gray-900' : 'bg-chat-ai text-gray-900',
+            isUser ? 'bg-chat-user dark:bg-blue-900/20 ml-auto text-gray-900 dark:text-gray-100' : 'bg-chat-ai dark:bg-gray-800 text-gray-900 dark:text-gray-100',
             isStreaming && 'animate-fade-in'
           )}
         >
@@ -92,7 +92,7 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full p-2 border border-gray-300 bg-white text-gray-900 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                 rows={3}
                 autoFocus
                 placeholder='메시지를 입력하세요.'
@@ -101,13 +101,13 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
                 
                 <button
                   onClick={handleCancelEdit}
-                  className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                  className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
                 >
                   취소
                 </button>
                 <button
                   onClick={handleSaveEdit}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="px-3 py-1 text-sm bg-blue-600 dark:bg-blue-500 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600"
                 >
                   보내기
                 </button>
@@ -120,19 +120,19 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
                 contentType={isUser ? 'text' : message.contentType || 'text'}
                 isStreaming={isStreaming}
               />
-              {isStreaming && <span className="inline-block w-2 h-4 bg-gray-400 animate-typing" />}
+              {isStreaming && <span className="inline-block w-2 h-4 bg-gray-400 dark:bg-gray-500 animate-typing" />}
             </>
           )}
         </div>
 
-        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
           <span>{formattedTime}</span>
           {!isStreaming && (
             <>
               {isUser && (
                 <button
                   onClick={handleEdit}
-                  className="hover:text-gray-700"
+                  className="hover:text-gray-700 dark:hover:text-gray-300"
                   aria-label="메시지 편집"
                 >
                   편집
@@ -141,7 +141,7 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
               {!isUser && (
                 <button
                   onClick={handleRegenerate}
-                  className="hover:text-gray-700"
+                  className="hover:text-gray-700 dark:hover:text-gray-300"
                   aria-label="응답 재생성"
                 >
                   재생성

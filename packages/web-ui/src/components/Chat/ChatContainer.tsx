@@ -61,9 +61,9 @@ function ChatContainer() {
     <div className="flex flex-col min-h-full max-w-5xl mx-auto">
       <div className="flex-1 px-4 py-6">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-14rem)] text-gray-500">
+          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-14rem)] text-gray-500 dark:text-gray-400">
             <svg
-              className="w-16 h-16 mb-4 text-gray-300"
+              className="w-16 h-16 mb-4 text-gray-300 dark:text-gray-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -75,7 +75,7 @@ function ChatContainer() {
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-            <h3 className="text-lg font-medium mb-2">채팅을 시작해보세요</h3>
+            <h3 className="text-lg font-medium mb-2 dark:text-gray-300">채팅을 시작해보세요</h3>
             <p className="text-sm text-center max-w-md">
               메시지에 "markdown", "html", "json" 키워드를 포함하면
               <br />
@@ -97,12 +97,12 @@ function ChatContainer() {
         )}
       </div>
 
-      <div className="sticky bottom-0 border-t border-gray-200 bg-white px-4 py-4">
+      <div className="sticky bottom-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-4">
         {/* 스크롤 다운 버튼 */}
         {!isAtBottom && messages.length > 0 && (
           <button
             onClick={scrollToBottom}
-            className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-full p-2 hover:shadow-xl transition-shadow"
+            className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 shadow-lg rounded-full p-2 hover:shadow-xl transition-shadow dark:text-gray-200"
             aria-label="최신 메시지로 이동"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,7 +114,7 @@ function ChatContainer() {
         {currentStreamingId && (
           <div className="flex items-center justify-center mb-2">
             <LoadingIndicator />
-            <span className="ml-2 text-sm text-gray-500">
+            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
               응답 생성 중...
               {messages.find(msg => msg.id === currentStreamingId && msg.role === 'assistant' && msg.content.trim().length > 0) && ' (ESC로 취소)'}
             </span>

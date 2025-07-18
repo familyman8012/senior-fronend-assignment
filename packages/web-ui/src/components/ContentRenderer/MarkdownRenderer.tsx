@@ -28,7 +28,7 @@ const createMarkdownComponents = (syntaxStyle: SyntaxStyle | null): Components =
     
     if (!inline && match) {
       return (
-        <Suspense fallback={<pre className="bg-gray-900 text-gray-300 p-4 rounded-md text-sm">로딩 중...</pre>}>
+        <Suspense fallback={<pre className="bg-gray-900 dark:bg-gray-800 text-gray-300 dark:text-gray-200 p-4 rounded-md text-sm">로딩 중...</pre>}>
           <SyntaxHighlighter
             style={syntaxStyle || {}}
             language={match[1]}
@@ -48,7 +48,7 @@ const createMarkdownComponents = (syntaxStyle: SyntaxStyle | null): Components =
     }
     
     return (
-      <code className="bg-gray-200 px-1 py-0.5 rounded text-base" {...props}>
+      <code className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-base" {...props}>
         {children}
       </code>
     );
@@ -57,25 +57,25 @@ const createMarkdownComponents = (syntaxStyle: SyntaxStyle | null): Components =
   table({ children }) {
     return (
       <div className="overflow-x-auto my-4">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           {children}
         </table>
       </div>
     );
   },
   thead({ children }) {
-    return <thead className="bg-gray-50">{children}</thead>;
+    return <thead className="bg-gray-50 dark:bg-gray-800">{children}</thead>;
   },
   th({ children }) {
     return (
-      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-white">
+      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
         {children}
       </th>
     );
   },
   td({ children }) {
     return (
-      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 bg-white">
+      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900">
         {children}
       </td>
     );
@@ -87,7 +87,7 @@ const createMarkdownComponents = (syntaxStyle: SyntaxStyle | null): Components =
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-600 hover:text-blue-800 underline"
+        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
       >
         {children}
       </a>
@@ -113,7 +113,7 @@ const createMarkdownComponents = (syntaxStyle: SyntaxStyle | null): Components =
   // 사용자 정의 인용구
   blockquote({ children }) {
     return (
-      <blockquote className="border-l-4 border-gray-300 pl-4 py-2 my-2 italic text-gray-700">
+      <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 py-2 my-2 italic text-gray-700 dark:text-gray-300">
         {children}
       </blockquote>
     );
@@ -147,7 +147,7 @@ export const MarkdownRenderer = memo(({ content }: MarkdownRendererProps) => {
   const markdownComponents = createMarkdownComponents(syntaxStyle);
   
   return (
-    <div className="markdown-content prose prose-sm max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2">
+    <div className="markdown-content prose prose-sm dark:prose-invert max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={markdownComponents}

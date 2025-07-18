@@ -46,7 +46,7 @@ function MessageInput({ onSendMessage, isLoading, disabled }: MessageInputProps)
       }}
       className="w-full"
     >
-      <div className="flex items-end gap-2 p-3 border border-gray-300 rounded-2xl bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+      <div className="flex items-end gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 focus-within:ring-2 focus-within:ring-blue-500 dark:focus-within:ring-blue-400 focus-within:border-transparent transition-all">
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
@@ -58,9 +58,9 @@ function MessageInput({ onSendMessage, isLoading, disabled }: MessageInputProps)
             disabled={disabled}
             className={clsx(
               'w-full px-1 py-0 resize-none border-0',
-              'bg-transparent text-gray-900 placeholder-gray-400',
+              'bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500',
               'focus:outline-none focus:ring-0',
-              'disabled:cursor-not-allowed disabled:text-gray-400',
+              'disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500',
               'min-h-[24px] max-h-[120px]'
             )}
             rows={1}
@@ -68,7 +68,7 @@ function MessageInput({ onSendMessage, isLoading, disabled }: MessageInputProps)
           />
           
           {message.length > 0 && (
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
               {message.length} 자
             </div>
           )}
@@ -79,10 +79,10 @@ function MessageInput({ onSendMessage, isLoading, disabled }: MessageInputProps)
           disabled={!message.trim() || disabled || isLoading}
           className={clsx(
             'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200',
-            'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
+            'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400',
             !message.trim() || disabled || isLoading
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-gray-900 text-white hover:bg-gray-800 hover:scale-110'
+              ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+              : 'bg-gray-900 dark:bg-gray-700 text-white hover:bg-gray-800 dark:hover:bg-gray-600 hover:scale-110'
           )}
           aria-label="메시지 전송"
         >

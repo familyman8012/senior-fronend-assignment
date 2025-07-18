@@ -33,23 +33,23 @@ const JSONTreeNode = memo(({ data, keyPath }: JSONTreeNodeProps) => {
   const renderedValue = useMemo(() => {
     const renderValue = (value: unknown, currentPath: string): JSX.Element => {
       if (value === null) {
-        return <span className="text-gray-500">null</span>;
+        return <span className="text-gray-500 dark:text-gray-400">null</span>;
       }
 
       if (value === undefined) {
-        return <span className="text-gray-500">undefined</span>;
+        return <span className="text-gray-500 dark:text-gray-400">undefined</span>;
       }
 
       if (typeof value === 'boolean') {
-        return <span className="text-blue-600">{value.toString()}</span>;
+        return <span className="text-blue-600 dark:text-blue-400">{value.toString()}</span>;
       }
 
       if (typeof value === 'number') {
-        return <span className="text-green-600">{value}</span>;
+        return <span className="text-green-600 dark:text-green-400">{value}</span>;
       }
 
       if (typeof value === 'string') {
-        return <span className="text-orange-600">"{value}"</span>;
+        return <span className="text-orange-600 dark:text-orange-400">"{value}"</span>;
       }
 
       if (Array.isArray(value)) {
@@ -58,7 +58,7 @@ const JSONTreeNode = memo(({ data, keyPath }: JSONTreeNodeProps) => {
             {value.length > 0 && (
               <button
                 onClick={toggleCollapse}
-                className="text-gray-600 hover:text-gray-800 mr-1 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mr-1 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 rounded"
                 aria-expanded={!collapsed}
                 aria-label={collapsed ? '배열 펼치기' : '배열 접기'}
               >
@@ -66,23 +66,23 @@ const JSONTreeNode = memo(({ data, keyPath }: JSONTreeNodeProps) => {
                 <span className="sr-only">{collapsed ? '배열 펼치기' : '배열 접기'}</span>
               </button>
             )}
-            <span className="text-gray-600">[</span>
+            <span className="text-gray-600 dark:text-gray-400">[</span>
             {!collapsed && value.length > 0 && (
               <div className="ml-4">
                 {value.map((item, index) => (
                   <div key={JSON.stringify([currentPath, 'array', index])}>
-                    <span className="text-gray-400">{index}:</span>{' '}
+                    <span className="text-gray-400 dark:text-gray-500">{index}:</span>{' '}
                     <JSONTreeNode 
                       data={item} 
                       keyPath={JSON.stringify([currentPath, 'array', index])}
                     />
-                    {index < value.length - 1 && <span className="text-gray-600">,</span>}
+                    {index < value.length - 1 && <span className="text-gray-600 dark:text-gray-400">,</span>}
                   </div>
                 ))}
               </div>
             )}
-            {collapsed && value.length > 0 && <span className="text-gray-400">...({value.length}개 항목)</span>}
-            <span className="text-gray-600">]</span>
+            {collapsed && value.length > 0 && <span className="text-gray-400 dark:text-gray-500">...({value.length}개 항목)</span>}
+            <span className="text-gray-600 dark:text-gray-400">]</span>
           </span>
         );
       }
@@ -94,7 +94,7 @@ const JSONTreeNode = memo(({ data, keyPath }: JSONTreeNodeProps) => {
             {entries.length > 0 && (
               <button
                 onClick={toggleCollapse}
-                className="text-gray-600 hover:text-gray-800 mr-1 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mr-1 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 rounded"
                 aria-expanded={!collapsed}
                 aria-label={collapsed ? '객체 펼치기' : '객체 접기'}
               >
@@ -102,13 +102,13 @@ const JSONTreeNode = memo(({ data, keyPath }: JSONTreeNodeProps) => {
                 <span className="sr-only">{collapsed ? '객체 펼치기' : '객체 접기'}</span>
               </button>
             )}
-            <span className="text-gray-600">{'{'}</span>
+            <span className="text-gray-600 dark:text-gray-400">{'{'}</span>
             {!collapsed && entries.length > 0 && (
               <div className="ml-4">
                 {entries.map(([k, v], index) => (
                   <div key={JSON.stringify([currentPath, 'object', k])}>
-                    <span className="text-purple-600">"{k}"</span>
-                    <span className="text-gray-600">: </span>
+                    <span className="text-purple-600 dark:text-purple-400">"{k}"</span>
+                    <span className="text-gray-600 dark:text-gray-400">: </span>
                     <JSONTreeNode 
                       data={v} 
                       keyPath={JSON.stringify([currentPath, 'object', k])}
@@ -118,13 +118,13 @@ const JSONTreeNode = memo(({ data, keyPath }: JSONTreeNodeProps) => {
                 ))}
               </div>
             )}
-            {collapsed && entries.length > 0 && <span className="text-gray-400">...({entries.length}개 속성)</span>}
-            <span className="text-gray-600">{'}'}</span>
+            {collapsed && entries.length > 0 && <span className="text-gray-400 dark:text-gray-500">...({entries.length}개 속성)</span>}
+            <span className="text-gray-600 dark:text-gray-400">{'}'}</span>
           </span>
         );
       }
 
-      return <span className="text-gray-700">{String(value)}</span>;
+      return <span className="text-gray-700 dark:text-gray-300">{String(value)}</span>;
     };
 
     return renderValue(data, keyPath);
@@ -193,12 +193,12 @@ export const JSONRenderer = memo(({ content, isStreaming = false }: JSONRenderer
       <div className="json-content">
         {!isStreaming && (
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm text-red-600">JSON 파싱 오류</span>
-            <span className="text-xs text-gray-500">({error})</span>
+            <span className="text-sm text-red-600 dark:text-red-400">JSON 파싱 오류</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">({error})</span>
           </div>
         )}
-        <pre className="bg-black p-3 rounded overflow-x-auto">
-          <code className="text-sm text-green-600 font-bold">{content}</code>
+        <pre className="bg-black dark:bg-gray-900 p-3 rounded overflow-x-auto">
+          <code className="text-sm text-green-600 dark:text-green-400 font-bold">{content}</code>
         </pre>
       </div>
     );
@@ -207,14 +207,14 @@ export const JSONRenderer = memo(({ content, isStreaming = false }: JSONRenderer
   return (
     <div className="json-content">
       <div className="flex justify-between items-center mb-2">
-        <span className="text-sm text-gray-600">JSON 데이터</span>
+        <span className="text-sm text-gray-600 dark:text-gray-400">JSON 데이터</span>
         <div className="flex gap-2" role="toolbar" aria-label="JSON 뷰어 도구">
           <button
             onClick={() => setViewMode('tree')}
-            className={`px-2 py-1 text-xs rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`px-2 py-1 text-xs rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 ${
               viewMode === 'tree' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-blue-600 dark:bg-blue-500 text-white' 
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
             }`}
             aria-pressed={viewMode === 'tree'}
           >
@@ -222,10 +222,10 @@ export const JSONRenderer = memo(({ content, isStreaming = false }: JSONRenderer
           </button>
           <button
             onClick={() => setViewMode('raw')}
-            className={`px-2 py-1 text-xs rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`px-2 py-1 text-xs rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 ${
               viewMode === 'raw' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-blue-600 dark:bg-blue-500 text-white' 
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
             }`}
             aria-pressed={viewMode === 'raw'}
           >
@@ -233,7 +233,7 @@ export const JSONRenderer = memo(({ content, isStreaming = false }: JSONRenderer
           </button>
           <button
             onClick={handleCopy}
-            className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             aria-label="JSON 데이터 클립보드에 복사"
           >
             {copySuccess ? '복사됨!' : '복사'}
@@ -246,11 +246,11 @@ export const JSONRenderer = memo(({ content, isStreaming = false }: JSONRenderer
       </div>
       
       {viewMode === 'tree' ? (
-        <div className="bg-gray-50 p-3 rounded font-mono text-sm overflow-x-auto">
+        <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded font-mono text-sm overflow-x-auto">
           <JSONTreeNode data={parsedData} keyPath="root" />
         </div>
       ) : (
-        <Suspense fallback={<div className="bg-gray-100 p-3 rounded">로딩 중...</div>}>
+        <Suspense fallback={<div className="bg-gray-100 dark:bg-gray-800 p-3 rounded">로딩 중...</div>}>
           {syntaxStyle ? (
             <SyntaxHighlighter
               language="json"
@@ -260,7 +260,7 @@ export const JSONRenderer = memo(({ content, isStreaming = false }: JSONRenderer
               {JSON.stringify(parsedData, null, 2)}
             </SyntaxHighlighter>
           ) : (
-            <div className="bg-gray-100 p-3 rounded">스타일 로딩 중...</div>
+            <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded">스타일 로딩 중...</div>
           )}
         </Suspense>
       )}

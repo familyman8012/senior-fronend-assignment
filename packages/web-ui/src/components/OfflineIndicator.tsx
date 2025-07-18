@@ -16,7 +16,7 @@ export const OfflineIndicator = memo(() => {
         'px-4 py-2 rounded-full shadow-lg',
         'flex items-center gap-2 text-sm font-medium',
         'transition-all duration-300',
-        !isOnline ? 'bg-red-600 text-white' : 'bg-yellow-500 text-white'
+        !isOnline ? 'bg-red-600 dark:bg-red-700 text-white' : 'bg-yellow-500 dark:bg-yellow-600 text-white'
       )}
     >
       <svg
