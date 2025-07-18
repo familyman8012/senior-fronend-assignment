@@ -23,7 +23,7 @@ test.describe('고급 기능 및 접근성', () => {
     
     // 첫 번째 대화가 완료되면 자동으로 저장됨 - 사이드바에서 확인
     // 저장된 세션이 나타날 때까지 대기
-    await expect(page.locator('.space-y-2 > div[role="button"]')).toHaveCount(1, { timeout: 5000 });
+    await expect(page.locator('[data-chat-session]')).toHaveCount(1, { timeout: 5000 });
     
     // 새 채팅 시작
     await page.getByRole('button', { name: '새 채팅' }).first().click();
@@ -35,7 +35,7 @@ test.describe('고급 기능 및 접근성', () => {
 
     // 두 번째 대화가 완료되면 자동으로 저장됨 - 사이드바에서 확인
     // 저장된 세션이 2개가 될 때까지 대기
-    await expect(page.locator('.space-y-2 > div[role="button"]')).toHaveCount(2, { timeout: 5000 });
+    await expect(page.locator('[data-chat-session]')).toHaveCount(2, { timeout: 5000 });
     
     // 첫 번째 세션 클릭하여 로드 (최신 것이 첫 번째에 위치하므로 두 번째 것이 첫 번째 대화)
     await chatSessions.nth(1).click();
@@ -82,7 +82,7 @@ test.describe('고급 기능 및 접근성', () => {
     await searchInput.fill('React');
     
     // React 대화만 표시되어야 함 (채팅 세션 확인)
-    const visibleSessions = page.locator('.space-y-2 > div[role="button"]:visible');
+    const visibleSessions = page.locator('[data-chat-session]:visible');
     await expect(visibleSessions).toHaveCount(1);
     await expect(visibleSessions).toContainText('React 관련');
   });
@@ -104,7 +104,7 @@ test.describe('고급 기능 및 접근성', () => {
     }
     
     // 세션 호버하여 액션 버튼 표시
-    const session = page.locator('.space-y-2 > div[role="button"]').first();
+    const session = page.locator('[data-chat-session]').first();
     await session.hover();
     
     // JSON 내보내기 테스트

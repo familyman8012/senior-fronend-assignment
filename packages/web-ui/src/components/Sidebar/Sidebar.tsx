@@ -240,6 +240,7 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
               sessions.map(session => (
                 <div
                   key={session.id}
+                  data-chat-session={session.id}
                   className={clsx(
                     'group relative rounded-lg transition-colors cursor-pointer px-3 py-2',
                     currentChatId === session.id
