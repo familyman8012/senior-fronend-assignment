@@ -93,7 +93,7 @@ function AppContent() {
           </div>
         </div>
       </ErrorBoundary>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {process.env.NODE_ENV !== 'test' && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   );
 }

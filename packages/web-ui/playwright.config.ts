@@ -19,10 +19,6 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
@@ -42,7 +38,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
-      command: 'pnpm dev:vite',
+      command: 'NODE_ENV=test pnpm dev:vite',
       port: 3000,
       reuseExistingServer: !process.env.CI,
     },

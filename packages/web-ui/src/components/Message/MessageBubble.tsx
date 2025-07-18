@@ -69,6 +69,7 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
         'flex items-start gap-3',
         isUser ? 'flex-row-reverse' : 'flex-row'
       )}
+      data-message-type={isUser ? 'user' : 'ai'}
     >
       <div
         className={clsx(
