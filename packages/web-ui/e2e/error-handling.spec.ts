@@ -128,12 +128,12 @@ test.describe('에러 처리 및 재시도', () => {
     await input.fill('재생성 테스트');
     await page.keyboard.press('Enter');
     
-    // 첫 번째 AI 응답 대기
-    const firstResponse = page.locator('text=/테스트 응답/').first();
+    // 첫 번째 AI 응답 대기 (data-message-type="ai" 속성으로 AI 메시지 찾기)
+    const firstResponse = page.locator('[data-message-type="ai"]').first();
     await expect(firstResponse).toBeVisible({ timeout: 10000 });
     
-    // 재생성 버튼 클릭
-    await page.hover(firstResponse.locator('..').locator('..'));
+    // 재생성 버튼 클릭 - AI 메시지에 hover해서 버튼 표시
+    await page.hover('[data-message-type="ai"]');
     await page.getByRole('button', { name: '응답 재생성' }).click();
     
     // 새로운 응답이 생성되는지 확인
