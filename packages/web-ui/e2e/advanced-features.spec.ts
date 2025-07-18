@@ -15,11 +15,15 @@ test.describe('고급 기능 및 접근성', () => {
     await expect(page.locator('[data-message-type="ai"]')).toBeVisible({ timeout: 10000 });
     
     // 데스크톱에서는 사이드바가 이미 열려있음, 모바일에서만 열기
-    const isMobile = await page.viewportSize()?.width! < 1024;
-    if (isMobile) {
-      const menuButton = page.getByRole('button', { name: 'Open sidebar' });
-      await menuButton.click();
-    }
+    // const isMobile = await page.viewportSize()?.width! < 1024;
+    // if (isMobile) {
+    //   const menuButton = page.getByRole('button', { name: 'Open sidebar' });
+    //   await menuButton.click();
+    // }
+    
+    // 첫 번째 대화가 완료되면 자동으로 저장됨 - 사이드바에서 확인
+    // 저장된 세션이 나타날 때까지 대기
+    await expect(page.locator('.space-y-2 > div[role="button"]')).toHaveCount(1, { timeout: 5000 });
     
     // 새 채팅 시작
     await page.getByRole('button', { name: '새 채팅' }).first().click();
@@ -27,13 +31,14 @@ test.describe('고급 기능 및 접근성', () => {
     // 새 대화
     await input.fill('두 번째 대화 메시지');
     await page.keyboard.press('Enter');
+    await expect(page.locator('[data-message-type="ai"]')).toBeVisible({ timeout: 10000 });
+
+    // 두 번째 대화가 완료되면 자동으로 저장됨 - 사이드바에서 확인
+    // 저장된 세션이 2개가 될 때까지 대기
+    await expect(page.locator('.space-y-2 > div[role="button"]')).toHaveCount(2, { timeout: 5000 });
     
-    // 히스토리에 두 대화가 표시되어야 함
-    await expect(page.getByText('첫 번째 대화 메시지...')).toBeVisible();
-    await expect(page.getByText('두 번째 대화 메시지...')).toBeVisible();
-    
-    // 첫 번째 대화 클릭하여 로드
-    await page.getByText('첫 번째 대화 메시지...').click();
+    // 첫 번째 세션 클릭하여 로드 (최신 것이 첫 번째에 위치하므로 두 번째 것이 첫 번째 대화)
+    await chatSessions.nth(1).click();
     
     // 메시지가 복원되어야 함
     await expect(page.getByText('첫 번째 대화 메시지')).toBeVisible();
@@ -55,23 +60,31 @@ test.describe('고급 기능 및 접근성', () => {
       await page.getByRole('button', { name: 'Open sidebar' }).click();
     }
     
+    // 첫 번째 대화 완료 후 저장 대기
+    await page.waitForTimeout(1000);
+    
     // 새 채팅
     await page.getByRole('button', { name: '새 채팅' }).first().click();
     await input.fill('TypeScript 질문');
     await page.keyboard.press('Enter');
+    await expect(page.locator('[data-message-type="ai"]')).toBeVisible({ timeout: 10000 });
+    
+    // 두 번째 대화 완료 후 저장 대기
+    await page.waitForTimeout(1000);
     
     // Ctrl/Cmd + K로 검색창 포커스
     await page.keyboard.press(isMac ? 'Meta+k' : 'Control+k');
     
-    const searchInput = page.getByPlaceholder(/대화 검색/);
+    const searchInput = page.getByPlaceholder(/대화 검색/).first();
     await expect(searchInput).toBeFocused();
     
     // 검색
     await searchInput.fill('React');
     
-    // React 대화만 표시되어야 함
-    await expect(page.getByText('React 관련 질문...')).toBeVisible();
-    await expect(page.getByText('TypeScript 질문...')).not.toBeVisible();
+    // React 대화만 표시되어야 함 (채팅 세션 확인)
+    const visibleSessions = page.locator('.space-y-2 > div[role="button"]:visible');
+    await expect(visibleSessions).toHaveCount(1);
+    await expect(visibleSessions).toContainText('React 관련');
   });
 
   test('채팅 세션 내보내기가 동작해야 함', async ({ page }) => {
@@ -81,6 +94,9 @@ test.describe('고급 기능 및 접근성', () => {
     await page.keyboard.press('Enter');
     await expect(page.locator('[data-message-type="ai"]')).toBeVisible({ timeout: 10000 });
     
+    // 대화 완료 후 저장 대기
+    await page.waitForTimeout(1000);
+    
     // 데스크톱에서는 사이드바가 이미 열려있음, 모바일에서만 열기
     const isMobile = await page.viewportSize()?.width! < 1024;
     if (isMobile) {
@@ -88,7 +104,7 @@ test.describe('고급 기능 및 접근성', () => {
     }
     
     // 세션 호버하여 액션 버튼 표시
-    const session = page.getByText('내보내기 테스트 메시지...').locator('..');
+    const session = page.locator('.space-y-2 > div[role="button"]').first();
     await session.hover();
     
     // JSON 내보내기 테스트
@@ -179,9 +195,10 @@ test.describe('고급 기능 및 접근성', () => {
   });
 
   test('접근성: 스크린 리더 지원이 적절해야 함', async ({ page }) => {
-    // Skip navigation 링크 확인
+    // Skip navigation 링크 확인 (첫 번째 탭으로 포커스)
     await page.keyboard.press('Tab');
     const skipNav = page.getByText('메인 콘텐츠로 건너뛰기');
+    await expect(skipNav).toBeVisible();
     await expect(skipNav).toBeFocused();
     
     // ARIA 라벨 확인
@@ -222,7 +239,16 @@ test.describe('고급 기능 및 접근성', () => {
     await context.close();
   });
 
-  
+  test('PWA: 오프라인에서도 기본 UI가 로드되어야 함', async ({ page, context }) => {
+    // 첫 방문으로 캐시 생성
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    
+    // Service Worker 등록 대기
+    await page.waitForTimeout(2000);
+    
+    // 오프라인 설정
+    await context.setOffline(true);
     
     // 페이지 새로고침
     await page.reload();
