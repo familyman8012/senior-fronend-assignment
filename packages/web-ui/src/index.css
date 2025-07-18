@@ -128,3 +128,10 @@ pre code {
 .html-content {
   color: #1f2937;
 }
+
+.dark .alim_box h4,
+.dark .alim_box p,
+.dark .alim_box ul,
+.dark .alim_box li, .dark .alim_box li::marker {
+  color: #000 !important;
+}

@@ -46,7 +46,7 @@ function MessageInput({ onSendMessage, isLoading, disabled }: MessageInputProps)
       }}
       className="w-full"
     >
-      <div className="flex items-end gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 focus-within:ring-2 focus-within:ring-blue-500 dark:focus-within:ring-blue-400 focus-within:border-transparent transition-all">
+      <div className="flex items-end gap-2 p-3 backdrop-blur-xl bg-white/60 dark:bg-gray-900/60 rounded-2xl border border-white/50 dark:border-white/10 shadow-lg focus-within:ring-2 focus-within:ring-blue-500 dark:focus-within:ring-blue-400 focus-within:border-transparent transition-all">
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}

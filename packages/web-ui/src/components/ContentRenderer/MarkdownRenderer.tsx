@@ -147,7 +147,13 @@ export const MarkdownRenderer = memo(({ content }: MarkdownRendererProps) => {
   const markdownComponents = createMarkdownComponents(syntaxStyle);
   
   return (
-    <div className="markdown-content prose prose-sm dark:prose-invert max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2">
+    <div className="markdown-content prose prose-sm dark:prose-invert max-w-none 
+      prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2
+      prose-li:marker:text-gray-900 dark:prose-li:marker:text-gray-300
+      prose-ul:text-gray-700 dark:prose-ul:text-gray-300
+      prose-ol:text-gray-700 dark:prose-ol:text-gray-300
+      prose-p:text-gray-700 dark:prose-p:text-gray-300
+      prose-headings:text-gray-900 dark:prose-headings:text-gray-100">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={markdownComponents}

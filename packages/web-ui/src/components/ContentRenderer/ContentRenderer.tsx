@@ -25,7 +25,8 @@ export const ContentRenderer = memo(({ content, contentType, isStreaming }: Cont
   
   return (
     <div className={needsBackground ? 'bg-white/50 rounded-lg p-4 -mx-2' : ''}>
-      <Renderer content={content} isStreaming={isStreaming} />
+        <Renderer content={content} isStreaming={isStreaming} />
+      </div>
     </div>
   );
 });

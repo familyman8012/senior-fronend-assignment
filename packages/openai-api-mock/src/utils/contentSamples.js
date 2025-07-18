@@ -9,7 +9,7 @@ export const CONTENT_SAMPLES = {
   html: [
     "<div><h3>HTML 예시</h3><button style='padding:8px 16px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;'>클릭 버튼</button><br><br><ul><li>목록 1</li><li>목록 2</li></ul><p><strong>굵은 글씨</strong>와 <em>기울임</em></p></div>",
     "<form style='border:1px solid #ddd; padding:16px; border-radius:8px;'><h4>사용자 정보 입력</h4><label>이름: <input type='text' placeholder='이름을 입력하세요' style='margin-left:8px; padding:4px;'></label><br><br><label>이메일: <input type='email' placeholder='email@example.com' style='margin-left:8px; padding:4px;'></label><br><br><button type='submit' style='background:#28a745; color:white; border:none; padding:8px 16px; border-radius:4px;'>전송</button></form>",
-    "<div style='background:#f8f9fa; padding:16px; border-left:4px solid #007bff;'><h4 style='margin:0 0 8px 0; color:#007bff;'>알림</h4><p style='margin:0;'>이것은 HTML 스타일이 적용된 알림 박스입니다.</p><ul style='margin:8px 0 0 0;'><li>항목 A</li><li>항목 B</li></ul></div>"
+    "<div class='alim_box' style='background:#f8f9fa; padding:16px; border-left:4px solid #007bff;'><h4 style='margin:0 0 8px 0; color:#007bff;'>알림</h4><p style='margin:0;'>이것은 HTML 스타일이 적용된 알림 박스입니다.</p><ul style='margin:8px 0 0 0;'><li>항목 A</li><li>항목 B</li></ul></div>"
   ],
   json: [
     '{\n  "user": {\n    "name": "김철수",\n    "age": 30,\n    "skills": ["React", "TypeScript", "Node.js"],\n    "isActive": true\n  },\n  "timestamp": "2024-01-15T09:30:00Z",\n  "status": "success"\n}',

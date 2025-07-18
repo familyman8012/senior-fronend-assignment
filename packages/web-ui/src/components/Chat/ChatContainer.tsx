@@ -97,12 +97,12 @@ function ChatContainer() {
         )}
       </div>
 
-      <div className="sticky bottom-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-4">
+      <div className="sticky bottom-0 border-t border-white/20 dark:border-gray-800/50 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 px-4 py-4">
         {/* 스크롤 다운 버튼 */}
         {!isAtBottom && messages.length > 0 && (
           <button
             onClick={scrollToBottom}
-            className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 shadow-lg rounded-full p-2 hover:shadow-xl transition-shadow dark:text-gray-200"
+            className="absolute -top-12 left-1/2 transform -translate-x-1/2 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border border-white/50 dark:border-white/10 shadow-xl rounded-full p-2 hover:shadow-2xl transition-all dark:text-gray-200"
             aria-label="최신 메시지로 이동"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
