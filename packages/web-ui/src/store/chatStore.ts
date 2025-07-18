@@ -16,7 +16,15 @@ interface ChatActions {
   getAbortController: () => AbortController | null;
   setCurrentChatId: (chatId: string | null) => void;
   createNewChat: () => void;
-  saveCurrentChat: () => void;
+  saveCurrentChat: () => ChatSession | null;
+}
+
+interface ChatSession {
+  id: string;
+  title: string;
+  messages: Message[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 type ChatStore = ChatState & ChatActions & {
@@ -136,10 +144,10 @@ export const useChatStore = create<ChatStore>()(
 
         saveCurrentChat: () => {
           const state = get();
-          if (!state.currentChatId || state.messages.length === 0) return;
+          if (!state.currentChatId || state.messages.length === 0) return null;
 
           const title = state.messages[0].content.slice(0, 10) + '...';
-          const chatData = {
+          const chatData: ChatSession = {
             id: state.currentChatId,
             title,
             messages: state.messages.filter((msg) => !msg.isStreaming),
@@ -159,6 +167,9 @@ export const useChatStore = create<ChatStore>()(
           }
 
           localStorage.setItem('chatSessions', JSON.stringify(existingChats));
+          
+          // 저장된 채팅 데이터 반환
+          return chatIndex !== -1 ? existingChats[chatIndex] : chatData;
         },
       }),
       {

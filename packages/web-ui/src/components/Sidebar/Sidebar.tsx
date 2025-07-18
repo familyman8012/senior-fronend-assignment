@@ -145,7 +145,23 @@ export const Sidebar = memo(({ isOpen, onClose }: SidebarProps) => {
   }, []);
 
 
-  // storage 이벤트로 동기화 (이미 ChatHistory에서 처리중이므로 여기서는 제거)
+  // storage 이벤트로 다른 탭과 동기화
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'chatSessions' && e.newValue) {
+        // React Query 캐시를 즉시 업데이트
+        try {
+          const newSessions = JSON.parse(e.newValue);
+          queryClient.setQueryData(chatQueryKeys.sessions(), newSessions);
+        } catch (error) {
+          console.error('Failed to parse storage event data:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [queryClient]);
 
   return (
     <>

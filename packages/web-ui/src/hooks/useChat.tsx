@@ -5,6 +5,7 @@ import { ContentType } from '@/types/chat';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useChatMutations } from '@/hooks/useChatMutations';
 import { errorHandler } from '@/utils/errorHandling';
+import { chatQueryKeys } from '@/hooks/useChatQueries';
 
 export function useChat() {
   const { isOnline } = useNetworkStatus();
@@ -64,8 +65,20 @@ export function useChat() {
         
         // 사용자 메시지 추가 후 자동 저장
         setTimeout(() => {
-          saveCurrentChat();
-          queryClient.invalidateQueries({ queryKey: ['chatSessions'] });
+          const savedChat = saveCurrentChat();
+          if (savedChat) {
+            // React Query 캐시 즉시 업데이트
+            queryClient.setQueryData(chatQueryKeys.sessions(), (oldData: any[] = []) => {
+              const existingIndex = oldData.findIndex((chat: any) => chat.id === savedChat.id);
+              if (existingIndex !== -1) {
+                const newData = [...oldData];
+                newData[existingIndex] = savedChat;
+                return newData;
+              } else {
+                return [savedChat, ...oldData];
+              }
+            });
+          }
         }, 100);
       }
     } else if (type === 'regenerate') {
@@ -107,8 +120,20 @@ export function useChat() {
         onSuccess: () => {
           // 어시스턴트 메시지 완료 후 자동 저장
           setTimeout(() => {
-            saveCurrentChat();
-            queryClient.invalidateQueries({ queryKey: ['chatSessions'] });
+            const savedChat = saveCurrentChat();
+            if (savedChat) {
+              // React Query 캐시 즉시 업데이트
+              queryClient.setQueryData(chatQueryKeys.sessions(), (oldData: any[] = []) => {
+                const existingIndex = oldData.findIndex((chat: any) => chat.id === savedChat.id);
+                if (existingIndex !== -1) {
+                  const newData = [...oldData];
+                  newData[existingIndex] = savedChat;
+                  return newData;
+                } else {
+                  return [savedChat, ...oldData];
+                }
+              });
+            }
           }, 100);
         },
       }

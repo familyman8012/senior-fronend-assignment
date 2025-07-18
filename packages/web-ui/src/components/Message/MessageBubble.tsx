@@ -36,11 +36,16 @@ export const MessageBubble = memo(({ message, onRegenerate, onEditAndResend }: M
   }, [isUser, isStreaming, message.content]);
 
   const handleSaveEdit = useCallback(() => {
-    if (editContent.trim() !== message.content && onEditAndResend) {
-      onEditAndResend(message.id, editContent.trim());
+    const trimmedContent = editContent.trim();
+    if (!trimmedContent) {
+      alert('메시지를 입력하세요.');
+      return;
+    }
+    if (onEditAndResend) {
+      onEditAndResend(message.id, trimmedContent);
     }
     setIsEditing(false);
-  }, [editContent, onEditAndResend, message.content, message.id]);
+  }, [editContent, onEditAndResend, message.id]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
