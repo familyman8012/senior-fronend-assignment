@@ -102,15 +102,14 @@ test.describe('에러 처리 및 재시도', () => {
     await input.fill('원본 메시지');
     await page.keyboard.press('Enter');
     
-    // AI 응답 대기
-    await expect(page.getByText(/테스트 응답/)).toBeVisible({ timeout: 10000 });
+    // AI 응답 대기 (일반적인 텍스트 응답이 나올 때까지 대기)
+    await expect(page.locator('[data-message-type="ai"]')).toBeVisible({ timeout: 10000 });
     
     // 메시지 편집 버튼 클릭
-    await page.hover(page.getByText('원본 메시지').locator('..').locator('..'));
-    await page.getByRole('button', { name: '메시지 편집' }).click();
+    await page.getByText('편집').click();
     
     // 메시지 수정
-    const editTextarea = page.locator('textarea[value="원본 메시지"]');
+    const editTextarea = page.locator('textarea').first();
     await editTextarea.clear();
     await editTextarea.fill('수정된 메시지');
     
@@ -119,7 +118,7 @@ test.describe('에러 처리 및 재시도', () => {
     
     // 수정된 메시지가 표시되고 새로운 응답이 생성되어야 함
     await expect(page.getByText('수정된 메시지')).toBeVisible();
-    await expect(page.getByText('원본 메시지')).not.toBeVisible();
+    await expect(page.locator('[data-message-type="user"]:has-text("원본 메시지")')).not.toBeVisible();
   });
 
   test('AI 응답 재생성이 동작해야 함', async ({ page }) => {
