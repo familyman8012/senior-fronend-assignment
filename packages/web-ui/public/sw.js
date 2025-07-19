@@ -1,8 +1,8 @@
 // 안전한 최소 PWA Service Worker
 // 오직 필수 오프라인 파일들만 캐싱, 앱 업데이트 우선
 
-const CACHE_VERSION = 'safe-pwa-v1';
-const OFFLINE_CACHE = 'offline-essentials';
+const CACHE_VERSION = 'safe-pwa-v2';
+const OFFLINE_CACHE = 'offline-essentials-v2';
 
 // 오프라인 필수 파일들만 캐싱 (앱 코드는 제외)
 const OFFLINE_ESSENTIALS = [
@@ -71,18 +71,41 @@ self.addEventListener('fetch', (event) => {
     return; // 네트워크로 직접
   }
   
-  // 앱 리소스(.js, .css)는 항상 네트워크 우선 (업데이트 즉시 반영)
+  // 앱 리소스는 네트워크 우선 + 오프라인 백업 전략
   if (url.pathname.includes('.js') || 
       url.pathname.includes('.css') ||
       url.pathname.includes('/assets/')) {
     event.respondWith(
+      // 네트워크 우선으로 최신 버전 가져오기
       fetch(request)
+        .then((response) => {
+          // 성공하면 캐시에 백업 저장 (오프라인용)
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(OFFLINE_CACHE).then((cache) => {
+              cache.put(request, responseClone);
+              console.log('[SW] Cached for offline:', url.pathname);
+            });
+          }
+          return response;
+        })
         .catch(() => {
-          // 네트워크 실패 시에만 빈 응답으로 앱 크래시 방지
-          const contentType = url.pathname.includes('.css') ? 'text/css' : 'application/javascript';
-          return new Response('/* Offline fallback */', {
-            headers: { 'Content-Type': contentType }
-          });
+          // 네트워크 실패 시 캐시에서 가져오기 (오프라인 지원)
+          console.log('[SW] Network failed, trying cache for:', url.pathname);
+          return caches.match(request)
+            .then((cachedResponse) => {
+              if (cachedResponse) {
+                console.log('[SW] Serving cached app resource:', url.pathname);
+                return cachedResponse;
+              }
+              
+              // 캐시에도 없으면 빈 응답 (앱 크래시 방지)
+              const contentType = url.pathname.includes('.css') ? 'text/css' : 'application/javascript';
+              console.warn('[SW] No cache available, returning empty fallback for:', url.pathname);
+              return new Response('/* Offline fallback - no cached version */', {
+                headers: { 'Content-Type': contentType }
+              });
+            });
         })
     );
     return;
