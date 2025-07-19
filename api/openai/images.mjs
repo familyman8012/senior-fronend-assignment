@@ -1,4 +1,4 @@
-import { openai, initializeMock } from './_init.mjs';
+import { getOpenAI, initializeMock } from './_init.mjs';
 
 // POST /api/openai/images  (프론트에선 /v1/images/generations 로 rewrite)
 export default async function handler(req, res) {
@@ -8,6 +8,7 @@ export default async function handler(req, res) {
   await initializeMock();
 
   try {
+    const openai = getOpenAI();
     const resp = await openai.images.generate(req.body);
     res.json(resp);
   } catch (err) {

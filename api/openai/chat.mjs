@@ -1,4 +1,4 @@
-import { openai, initializeMock } from './_init.mjs';
+import { getOpenAI, initializeMock } from './_init.mjs';
 
 // POST /api/openai/chat  (프론트에선 /v1/chat/completions 로 rewrite)
 export default async function handler(req, res) {
@@ -21,6 +21,9 @@ export default async function handler(req, res) {
   const { stream, ...body } = req.body;
 
   try {
+    const openai = getOpenAI();
+    console.log('🤖 Using OpenAI client for API call');
+    
     if (stream) {
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
