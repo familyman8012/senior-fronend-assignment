@@ -1,6 +1,6 @@
 {
   "installCommand": "corepack enable && pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter web-ui build",
+  "buildCommand": "pnpm build",
   "outputDirectory": "packages/web-ui/dist",
   "routes": [
     { "src": "/v1/chat/completions",  "dest": "/api/openai/chat"   },
