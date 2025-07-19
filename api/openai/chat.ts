@@ -1,9 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { openai } from './_init';
+import { openai, initializeMock } from './_init';
 
 // POST /api/openai/chat  (프론트에선 /v1/chat/completions 로 rewrite)
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).end();
+
+  // Mock 초기화
+  await initializeMock();
 
   const { stream, ...body } = req.body;
 
