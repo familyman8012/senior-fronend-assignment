@@ -26,12 +26,6 @@ export async function initializeMock() {
       isInitialized = true;
       console.log('✅ Mock initialized successfully, mockCtrl:', mockCtrl);
       
-      // Mock 초기화 후 OpenAI 클라이언트 생성
-      openai = new OpenAI({ 
-        apiKey: 'test-key',
-        dangerouslyAllowBrowser: true
-      });
-      console.log('🤖 OpenAI client created after mock initialization');
       
     } catch (error) {
       console.error('❌ Failed to initialize mock:', error);
@@ -40,6 +34,13 @@ export async function initializeMock() {
   } else {
     console.log('♻️ Mock already initialized');
   }
+  
+  // Mock 초기화 후 항상 새로운 OpenAI 클라이언트 생성
+  openai = new OpenAI({ 
+    apiKey: 'test-key',
+    dangerouslyAllowBrowser: true
+  });
+  console.log('🤖 OpenAI client created/recreated after mock check');
   
   return mockCtrl;
 }
