@@ -3,7 +3,13 @@ import { ChatCompletionMessageParam, ChatCompletionChunk } from 'openai/resource
 
 // OpenAI 클라이언트 구성
 // 개발 환경에서는 localhost:3001에서 모의 서버가 실행될 것으로 예상합니다.
-const baseURL = import.meta.env.VITE_OPENAI_API_BASE ?? '/v1';   // ← '/v1' 로 끝!
+// 임시 테스트: 절대 경로 사용
+const defaultBaseURL = typeof window !== 'undefined' 
+  ? `${window.location.origin}/v1` 
+  : '/v1';
+const baseURL = import.meta.env.VITE_OPENAI_API_BASE ?? defaultBaseURL;
+
+console.log('OpenAI baseURL:', baseURL);
 
 const openai = new OpenAI({
   apiKey:  'test-key',
@@ -88,6 +94,10 @@ export class OpenAIService {
         }
       }
     } catch (error) {
+      // 디버깅: 에러 상세 정보 출력
+      console.error('OpenAI API Error:', error);
+      alert(`OpenAI API 에러! ${error instanceof Error ? error.message : String(error)}`);
+      
       // AbortError 포함 모든 에러를 캐치
       if (error instanceof Error && error.name === 'AbortError') {
         // 중단은 정상적인 플로우이므로 조용히 처리
