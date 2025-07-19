@@ -1,60 +1,17 @@
 import OpenAI from 'openai';
 import { ChatCompletionMessageParam, ChatCompletionChunk } from 'openai/resources/chat/completions';
 
-// Mock 초기화 상태
-let mockInitialized = false;
+// OpenAI 클라이언트 구성 - Vercel API 함수 사용
+const defaultBaseURL = typeof window !== 'undefined' 
+  ? `${window.location.origin}/v1` 
+  : '/v1';
+const baseURL = import.meta.env.VITE_OPENAI_API_BASE ?? defaultBaseURL;
 
-// Mock 초기화 함수
-async function initializeMockIfNeeded() {
-  if (!mockInitialized) {
-    try {
-      // 여러 경로 시도
-      const possiblePaths = [
-        '@ai-chat/openai-api-mock',  // package name
-        '/packages/openai-api-mock/dist/index.js',  // 절대 경로
-        '../../../openai-api-mock/dist/index.js',   // 상대 경로
-      ];
-      
-      let mockModule = null;
-      let successPath = '';
-      
-      for (const path of possiblePaths) {
-        try {
-          console.log(`Trying to import mock from: ${path}`);
-          mockModule = await eval(`import('${path}')`);
-          successPath = path;
-          break;
-        } catch (err) {
-          console.log(`Failed to import from ${path}:`, err);
-        }
-      }
-      
-      if (!mockModule) {
-        throw new Error('Could not import mock module from any path');
-      }
-      
-      const { mockOpenAIResponse } = mockModule;
-      
-      // Mock 활성화
-      mockOpenAIResponse(true, {
-        seed: 12345,
-        latency: 400,
-        logRequests: true, // 디버깅을 위해 활성화
-      });
-      
-      mockInitialized = true;
-      console.log(`✅ Mock initialized successfully from: ${successPath}`);
-      alert(`✅ Mock 초기화 성공! (경로: ${successPath})`);
-    } catch (error) {
-      console.error('❌ Failed to initialize mock:', error);
-      alert(`❌ Mock 초기화 실패: ${error}`);
-    }
-  }
-}
+console.log('OpenAI baseURL:', baseURL);
 
-// OpenAI 클라이언트 구성 (mock 사용을 위해 기본 baseURL 사용)
 const openai = new OpenAI({
   apiKey: 'test-key',
+  baseURL,
   dangerouslyAllowBrowser: true,
   maxRetries: 0,
 });
@@ -86,15 +43,15 @@ export class OpenAIService {
     onComplete,
   }: ChatStreamOptions): Promise<void> {
     try {
-      // Mock 초기화
-      await initializeMockIfNeeded();
-      
       // 디버깅을 위한 로그 추가
       console.log('OpenAIService.createChatStream called:', {
+        baseURL,
         model,
         messagesCount: messages.length,
         timestamp: new Date().toISOString()
       });
+      
+      alert(`API 호출 시도! baseURL: ${baseURL}, messages: ${messages.length}개`);
 
       const stream = await openai.chat.completions.create({
         model,
