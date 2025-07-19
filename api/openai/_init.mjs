@@ -21,6 +21,10 @@ export async function initializeMock() {
         seed: 12345,
         latency: 400,
         logRequests: true, // 활성화
+        includeErrors: false, // 에러 시뮬레이션 비활성화
+        interceptorOptions: {
+          verbose: true // interceptor 디버깅
+        }
       });
       
       isInitialized = true;
@@ -36,11 +40,13 @@ export async function initializeMock() {
   }
   
   // Mock 초기화 후 항상 새로운 OpenAI 클라이언트 생성
+  // 테스트: 다른 baseURL로 설정해서 mock이 작동하는지 확인
   openai = new OpenAI({ 
     apiKey: 'test-key',
+    baseURL: 'https://api.openai.com/v1',  // 명시적으로 설정
     dangerouslyAllowBrowser: true
   });
-  console.log('🤖 OpenAI client created/recreated after mock check');
+  console.log('🤖 OpenAI client created with explicit baseURL');
   
   return mockCtrl;
 }
