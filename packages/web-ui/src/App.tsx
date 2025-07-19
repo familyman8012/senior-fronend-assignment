@@ -7,6 +7,7 @@ import { Sidebar } from './components/Sidebar/Sidebar';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { SkipNavigation } from './components/SkipNavigation';
 import { ToastContainer } from './components/Toast/ToastContainer';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import { queryClient } from './lib/queryClient';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
@@ -89,6 +90,7 @@ function AppContent() {
             <main id="main-content" className="flex-1">
               <ChatContainer />
               <OfflineIndicator />
+              <PWAInstallPrompt />
             </main>
           </div>
         </div>
