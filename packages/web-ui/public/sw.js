@@ -1,8 +1,8 @@
 // 안전한 최소 PWA Service Worker
 // 오직 필수 오프라인 파일들만 캐싱, 앱 업데이트 우선
 
-const CACHE_VERSION = 'safe-pwa-v2';
-const OFFLINE_CACHE = 'offline-essentials-v2';
+const CACHE_VERSION = 'safe-pwa-v3';
+const OFFLINE_CACHE = 'offline-essentials-v3';
 
 // 오프라인 필수 파일들만 캐싱 (앱 코드는 제외)
 const OFFLINE_ESSENTIALS = [
@@ -64,10 +64,11 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // API 요청은 절대 건드리지 않음
+  // API 요청과 네트워크 테스트는 절대 건드리지 않음
   if (url.pathname.startsWith('/api/') || 
       url.hostname.includes('api.') ||
-      url.hostname.includes('openai.com')) {
+      url.hostname.includes('openai.com') ||
+      url.search.includes('_network_test')) {
     return; // 네트워크로 직접
   }
   
@@ -170,12 +171,39 @@ self.addEventListener('fetch', (event) => {
   // 기타 모든 요청은 네트워크로
 });
 
-// 캐시 크기 관리 (25MB 제한)
+// 메시지 처리 및 네트워크 상태 체크
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'CLEAN_CACHE') {
     event.waitUntil(cleanupCache());
   }
+  
+  if (event.data && event.data.type === 'CHECK_NETWORK') {
+    // Service Worker에서 실제 네트워크 상태 테스트
+    event.waitUntil(checkNetworkAndRespond(event.source));
+  }
 });
+
+// Service Worker에서 네트워크 상태 체크
+async function checkNetworkAndRespond(client) {
+  try {
+    // 외부 서버로 간단한 요청 (Google의 generate_204 endpoint)
+    const response = await fetch('https://www.google.com/generate_204', {
+      method: 'HEAD',
+      mode: 'no-cors',
+      cache: 'no-cache'
+    });
+    
+    client.postMessage({
+      type: 'NETWORK_STATUS',
+      isOnline: true
+    });
+  } catch (error) {
+    client.postMessage({
+      type: 'NETWORK_STATUS', 
+      isOnline: false
+    });
+  }
+}
 
 async function cleanupCache() {
   try {
