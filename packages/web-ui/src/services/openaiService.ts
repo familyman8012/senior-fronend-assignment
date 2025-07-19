@@ -3,9 +3,11 @@ import { ChatCompletionMessageParam, ChatCompletionChunk } from 'openai/resource
 
 // OpenAI 클라이언트 구성
 // 개발 환경에서는 localhost:3001에서 모의 서버가 실행될 것으로 예상합니다.
+const baseURL = import.meta.env.VITE_OPENAI_API_BASE ?? '/v1';   // ← '/v1' 로 끝!
+
 const openai = new OpenAI({
   apiKey:  'test-key',
-  baseURL: 'http://localhost:3001/v1',
+  baseURL,
   dangerouslyAllowBrowser: true,
   maxRetries: 0, // OpenAI 클라이언트의 자체 재시도 비활성화
 });

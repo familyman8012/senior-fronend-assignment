@@ -11,7 +11,18 @@
       "Bash(npx playwright test:*)",
       "Bash(ls:*)",
       "Bash(find:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(timeout 30 npx vitest run --reporter=verbose \"src/test/integration/chatStreaming.test.tsx\")",
+      "Bash(timeout 20 npx vitest run --reporter=verbose \"src/test/integration/chatStreaming.test.tsx\")",
+      "Bash(timeout 15 npx vitest run --reporter=verbose \"src/test/integration/chatStreaming.test.tsx\" --testNamePattern=\"다양한 콘텐츠 타입이 올바르게 렌더링되어야 함\")",
+      "Bash(vercel)",
+      "Bash(npm install:*)",
+      "Bash(cmd /c \"pnpm install --frozen-lockfile\")",
+      "Bash(where pnpm)",
+      "Bash(pnpm build:*)",
+      "Bash(powershell:*)",
+      "Bash(npm run build:*)",
+      "Bash(cmd /c:*)"
     ],
     "deny": []
   }

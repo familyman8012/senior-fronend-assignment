@@ -9,7 +9,7 @@ export const queryClient = new QueryClient({
     },
   }),
   mutationCache: new MutationCache({
-    onError: (error, variables, context, mutation) => {
+    onError: (error, _variables, _context, mutation) => {
       // 뮤테이션 에러 중앙 처리
       errorHandler.handle(error, `Mutation:${mutation.options.mutationKey?.join('.') || 'unknown'}`);
     },

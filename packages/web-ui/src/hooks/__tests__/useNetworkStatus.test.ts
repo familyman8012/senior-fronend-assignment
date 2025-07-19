@@ -151,7 +151,7 @@ describe('useNetworkStatus hook', () => {
     const changeHandler = mockConnection.addEventListener.mock.calls[0][1];
     
     act(() => {
-      mockConnection.effectiveType = '2g';
+      (mockConnection as any).effectiveType = '2g';
       mockConnection.rtt = 300;
       changeHandler();
     });
@@ -190,6 +190,4 @@ describe('useNetworkStatus hook', () => {
     // 이벤트 리스너가 제거되었는지 확인
     expect(mockConnection.removeEventListener).toHaveBeenCalledWith('change', expect.any(Function));
   });
-
- 
 });

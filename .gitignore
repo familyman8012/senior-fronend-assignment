@@ -42,3 +42,4 @@ playwright/.cache/
 *.tsbuildinfo
 
 node_modules
+.vercel

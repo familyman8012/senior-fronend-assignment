@@ -179,8 +179,8 @@ export {
   createEvent,
   getNodeText,
   getConfig,
-  Config,
-  ConfigFn,
+  type Config,
+  type ConfigFn,
 } from '@testing-library/react';
 
 // Export our custom render as 'render'

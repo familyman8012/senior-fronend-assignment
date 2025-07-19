@@ -11,24 +11,37 @@ export const handlers = [
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         async start(controller) {
-          const content = body.messages[0].content.toLowerCase();
+          const lastMessage = body.messages[body.messages.length - 1];
+          const content = lastMessage.content.toLowerCase();
           let responseContent = '';
           let contentType = 'text';
+          
+          // 디버깅 로그 제거
 
           // 콘텐츠 타입 감지
-          if (content.includes('markdown')) {
+          if (content.includes('markdown') || content.includes('md')) {
             contentType = 'markdown';
-            responseContent = '# 마크다운 예시\n\n- 리스트 항목\n- **굵은 글씨**\n\n```javascript\nconsole.log("Hello");\n```';
+            responseContent = '# 마크다운 예시\n\n- 체크리스트\n- [x] 완료된 항목\n\n**굵은 글씨**';
+            // console.log('✓ Markdown condition triggered');
           } else if (content.includes('html')) {
             contentType = 'html';
-            responseContent = '<div><h3>HTML 예시</h3><p>안전한 <strong>HTML</strong> 렌더링</p></div>';
+            responseContent = '<div><h3>HTML 예시</h3><button>클릭 버튼</button></div>';
+            // console.log('✓ HTML condition triggered');
           } else if (content.includes('json')) {
             contentType = 'json';
-            responseContent = '{"name": "테스트", "age": 30, "skills": ["React", "TypeScript"]}';
+            responseContent = '{\n  "user": {\n    "name": "김철수",\n    "age": 30\n  }\n}';
+            // console.log('✓ JSON condition triggered');
           } else {
             responseContent = '안녕하세요! 테스트 응답입니다.';
+            // console.log('✗ Default condition triggered');
           }
+          
+          // console.log('Final responseContent:', responseContent);
+          // console.log('Final contentType:', contentType);
 
+          // 스트리밍 시작 전 지연 추가
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
           // 스트리밍 시뮬레이션
           for (let i = 0; i < responseContent.length; i++) {
             const chunk = {
@@ -47,7 +60,7 @@ export const handlers = [
             };
             
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
-            await new Promise(resolve => setTimeout(resolve, 10)); // 10ms 딜레이
+            await new Promise(resolve => setTimeout(resolve, 10)); // 10ms 딜레이로 감소
           }
 
           // 종료 신호
