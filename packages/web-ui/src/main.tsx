@@ -5,6 +5,18 @@ import './index.css';
 
 // 안전한 Service Worker 등록 - 프로덕션에서만, 개발에서는 완전 비활성화
 
+// 모바일 디바이스 감지 유틸리티
+const isMobileDevice = (): boolean => {
+  return (
+    typeof window !== 'undefined' &&
+    (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      ('ontouchstart' in window) ||
+      (navigator.maxTouchPoints > 0)
+    )
+  );
+};
+
 if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
     // 프로덕션: 안전한 PWA 등록
@@ -23,7 +35,7 @@ if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.register('/sw.js');
         console.log('[PWA] Safe PWA service worker registered:', registration.scope);
         
-        // 업데이트 감지 및 안전한 적용 (모바일 무한 새로고침 방지)
+        // 업데이트 감지 및 적용 (모바일에서만 무한 새로고침 방지)
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
@@ -31,19 +43,27 @@ if ('serviceWorker' in navigator) {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 console.log('[PWA] New version available');
                 
-                // 무한 새로고침 방지: 세션 중 한 번만 업데이트 허용
-                const hasUpdatedThisSession = sessionStorage.getItem('pwa-updated');
-                if (!hasUpdatedThisSession) {
-                  console.log('[PWA] Applying update...');
-                  sessionStorage.setItem('pwa-updated', 'true');
-                  newWorker.postMessage({ type: 'SKIP_WAITING' });
-                  
-                  // 모바일에서 더 안전한 업데이트를 위해 짧은 지연 추가
-                  setTimeout(() => {
-                    window.location.reload();
-                  }, 100);
+                const isMobile = isMobileDevice();
+                
+                if (isMobile) {
+                  // 모바일: 무한 새로고침 방지 로직 적용
+                  const hasUpdatedThisSession = sessionStorage.getItem('pwa-updated');
+                  if (!hasUpdatedThisSession) {
+                    console.log('[PWA] Applying update (mobile)...');
+                    sessionStorage.setItem('pwa-updated', 'true');
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    
+                    setTimeout(() => {
+                      window.location.reload();
+                    }, 100);
+                  } else {
+                    console.log('[PWA] Update skipped - already updated this session (mobile)');
+                  }
                 } else {
-                  console.log('[PWA] Update skipped - already updated this session');
+                  // 데스크탑: 즉시 업데이트 (기존 동작)
+                  console.log('[PWA] Applying update (desktop)...');
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  window.location.reload();
                 }
               }
             });

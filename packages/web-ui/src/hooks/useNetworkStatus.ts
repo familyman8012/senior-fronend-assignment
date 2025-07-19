@@ -1,5 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+// 모바일 디바이스 감지 유틸리티
+const isMobileDevice = (): boolean => {
+  return (
+    typeof window !== 'undefined' &&
+    (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      ('ontouchstart' in window) ||
+      (navigator.maxTouchPoints > 0)
+    )
+  );
+};
+
 declare global {
   interface NetworkInformation extends EventTarget {
     readonly effectiveType?: '2g' | '3g' | '4g' | 'slow-2g';
@@ -61,27 +73,36 @@ export function useNetworkStatus(): NetworkStatus {
     });
   }, []);
 
-  // 디바운스된 네트워크 상태 업데이트 (모바일에서 과도한 상태 변화 방지)
-  const debouncedUpdateNetworkStatus = useCallback(() => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
+  // Connection API 변경에만 사용되는 디바운스 (모바일에서만 적용)
+  const debouncedUpdateForConnectionChange = useCallback(() => {
+    const isMobile = isMobileDevice();
     
-    debounceTimeoutRef.current = setTimeout(() => {
+    if (isMobile) {
+      // 모바일에서는 connection API 변화만 디바운스 적용
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      
+      debounceTimeoutRef.current = setTimeout(() => {
+        updateNetworkStatus();
+      }, 200);
+    } else {
+      // 데스크탑에서는 즉시 반응
       updateNetworkStatus();
-    }, 200); // 200ms 디바운스
+    }
   }, [updateNetworkStatus]);
 
   useEffect(() => {
     // 초기 네트워크 상태 체크
     updateNetworkStatus();
 
+    // 온라인/오프라인 이벤트는 항상 즉시 반응 (중요한 상태 변화)
     const handleOnline = () => {
-      debouncedUpdateNetworkStatus();
+      updateNetworkStatus();
     };
 
     const handleOffline = () => {
-      debouncedUpdateNetworkStatus();
+      updateNetworkStatus();
     };
 
     window.addEventListener('online', handleOnline);
@@ -93,7 +114,7 @@ export function useNetworkStatus(): NetworkStatus {
                        navigator.webkitConnection;
 
     if (connection) {
-      connection.addEventListener('change', debouncedUpdateNetworkStatus);
+      connection.addEventListener('change', debouncedUpdateForConnectionChange);
     }
 
     return () => {
@@ -101,7 +122,7 @@ export function useNetworkStatus(): NetworkStatus {
       window.removeEventListener('offline', handleOffline);
       
       if (connection) {
-        connection.removeEventListener('change', debouncedUpdateNetworkStatus);
+        connection.removeEventListener('change', debouncedUpdateForConnectionChange);
       }
       
       // 디바운스 타이머 정리
@@ -109,7 +130,7 @@ export function useNetworkStatus(): NetworkStatus {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [updateNetworkStatus, debouncedUpdateNetworkStatus]);
+  }, [updateNetworkStatus, debouncedUpdateForConnectionChange]);
 
   return status;
 }

@@ -170,9 +170,14 @@ self.addEventListener('fetch', (event) => {
   // 기타 모든 요청은 네트워크로
 });
 
-// 메시지 처리 - 무한 새로고침 방지 안전장치 추가
+// 메시지 처리 - 모바일에서만 무한 새로고침 방지 안전장치 적용
 let lastSkipWaitingTime = 0;
 const SKIP_WAITING_COOLDOWN = 2000; // 2초 쿨다운
+
+// 모바일 디바이스 감지 (Service Worker 컨텍스트용)
+const isMobileFromUserAgent = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
 
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'CLEAN_CACHE') {
@@ -180,13 +185,22 @@ self.addEventListener('message', (event) => {
   }
   
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    const now = Date.now();
-    if (now - lastSkipWaitingTime > SKIP_WAITING_COOLDOWN) {
-      console.log('[SW] Processing SKIP_WAITING request');
-      lastSkipWaitingTime = now;
-      self.skipWaiting();
+    const isMobile = isMobileFromUserAgent();
+    
+    if (isMobile) {
+      // 모바일: 쿨다운 적용
+      const now = Date.now();
+      if (now - lastSkipWaitingTime > SKIP_WAITING_COOLDOWN) {
+        console.log('[SW] Processing SKIP_WAITING request (mobile)');
+        lastSkipWaitingTime = now;
+        self.skipWaiting();
+      } else {
+        console.log('[SW] SKIP_WAITING ignored - cooldown active (mobile)');
+      }
     } else {
-      console.log('[SW] SKIP_WAITING ignored - cooldown active');
+      // 데스크탑: 즉시 처리
+      console.log('[SW] Processing SKIP_WAITING request (desktop)');
+      self.skipWaiting();
     }
   }
 });
