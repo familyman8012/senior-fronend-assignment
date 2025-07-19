@@ -1,8 +1,7 @@
-// OpenAI Chat Completions Mock API
-// 직접 구현 - 서버리스 최적화
-// Node.js Functions에서 Request/Response API 사용
+// OpenAI Chat Completions Mock API - Complete Implementation
+// Vercel Serverless 환경에 최적화된 전체 기능 구현
 
-// openai-api-mock과 동일한 Content Samples
+// Content Samples (openai-api-mock과 동일)
 const CONTENT_SAMPLES = {
   markdown: [
     "# 마크다운 예시\n\n- 체크리스트\n- [x] 완료된 항목\n- [ ] 미완료 항목\n\n```javascript\nconst code = 'example';\nconsole.log('Hello World');\n```\n\n**굵은 글씨**와 *기울임*도 지원합니다.",
@@ -26,12 +25,19 @@ const CONTENT_SAMPLES = {
   ]
 };
 
-// 간단한 랜덤 선택 함수 (faker.js 대신)
+// Stream states storage (서버리스 환경에서는 메모리에 저장)
+const streamStates = new Map();
+
+// 유틸리티 함수들
 function getRandomElement(array) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-// Content type 감지 함수 (openai-api-mock과 동일)
+function generateId() {
+  return Math.random().toString(36).substr(2, 30);
+}
+
+// Content type 감지 (openai-api-mock과 동일)
 function detectContentType(messages) {
   const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
   
@@ -47,92 +53,238 @@ function detectContentType(messages) {
   return 'text';
 }
 
-// Content sample 반환 함수 (openai-api-mock과 동일)
+// Content sample 반환
 function getContentSample(contentType) {
   const samples = CONTENT_SAMPLES[contentType] || CONTENT_SAMPLES.text;
   return getRandomElement(samples);
 }
 
-// OpenAI API 형식의 응답 생성
-function createOpenAIResponse(content, streaming = false) {
+// 토큰 계산 (대략적인 계산)
+function calculateTokens(text) {
+  return Math.floor(text.length / 4);
+}
+
+// Stream cleanup
+function cleanupStream(streamId) {
+  if (streamId && streamStates.has(streamId)) {
+    streamStates.delete(streamId);
+  }
+}
+
+// OpenAI 응답 생성 (전체 기능 포함)
+function createChatResponse(content, contentType, streaming = false, streamId = null, isFirst = false, isLast = false) {
+  const id = streamId || `chatcmpl-${generateId()}`;
+  const created = Math.floor(Date.now() / 1000);
+  
   const baseResponse = {
-    id: `chatcmpl-${Math.random().toString(36).substr(2, 9)}`,
+    id,
     object: streaming ? 'chat.completion.chunk' : 'chat.completion',
-    created: Math.floor(Date.now() / 1000),
-    model: 'gpt-3.5-turbo',
+    created,
+    model: 'gpt-3.5-turbo-0125',
+    system_fingerprint: null,
     choices: [{
       index: 0,
-      finish_reason: streaming ? null : 'stop'
+      logprobs: null,
+      finish_reason: null
     }]
   };
 
   if (streaming) {
-    baseResponse.choices[0].delta = { content };
+    // 스트리밍 응답
+    baseResponse.choices[0].delta = {
+      content: content || ''
+    };
+    
+    // 첫 번째 청크에는 role 추가
+    if (isFirst) {
+      baseResponse.choices[0].delta.role = 'assistant';
+      baseResponse.choices[0].delta.contentType = contentType;
+    }
+    
+    // 마지막 청크
+    if (isLast) {
+      baseResponse.choices[0].finish_reason = 'stop';
+      baseResponse.choices[0].delta.contentType = contentType;
+    }
   } else {
+    // 일반 응답
     baseResponse.choices[0].message = {
       role: 'assistant',
-      content
+      content,
+      contentType
+    };
+    baseResponse.choices[0].finish_reason = 'stop';
+    baseResponse.usage = {
+      prompt_tokens: 57,
+      completion_tokens: calculateTokens(content),
+      total_tokens: 57 + calculateTokens(content)
     };
   }
 
   return baseResponse;
 }
 
-// POST /api/openai/chat (프론트에선 /v1/chat/completions로 rewrite)
+// 스트리밍 처리 함수
+async function handleStreaming(req, res, content, contentType, options = {}) {
+  const streamId = `chatcmpl-${generateId()}`;
+  let isAborted = false;
+  
+  // Stream state 초기화
+  streamStates.set(streamId, {
+    content,
+    contentType,
+    index: 0,
+    created: Date.now()
+  });
+
+  // Abort 처리 (req.on('close') 사용)
+  if (req && req.on) {
+    req.on('close', () => {
+      isAborted = true;
+      cleanupStream(streamId);
+    });
+  }
+
+  // 헤더 설정
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+
+  try {
+    // 첫 번째 청크 (role과 contentType 포함)
+    const firstChunk = createChatResponse('', contentType, true, streamId, true, false);
+    res.write(`data: ${JSON.stringify(firstChunk)}\n\n`);
+
+    // Character-by-character 스트리밍
+    for (let i = 0; i < content.length; i++) {
+      if (isAborted) break;
+
+      const char = content[i];
+      const chunk = createChatResponse(char, contentType, true, streamId, false, false);
+      res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+
+      // 자연스러운 스트리밍을 위한 지연
+      const delay = options.latency || (char === ' ' ? 10 : 20);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+
+    if (!isAborted) {
+      // 마지막 청크 (finish_reason 포함)
+      const lastChunk = createChatResponse('', contentType, true, streamId, false, true);
+      res.write(`data: ${JSON.stringify(lastChunk)}\n\n`);
+      res.write('data: [DONE]\n\n');
+    }
+  } finally {
+    cleanupStream(streamId);
+    res.end();
+  }
+}
+
+// 메인 핸들러
 export default async function handler(req, res) {
-  console.log('🚀 Mock API Handler called');
+  console.log('🚀 Mock Chat API Handler called');
   
   if (req.method !== 'POST') {
-    return res.status(405).end();
+    return res.status(405).json({ error: { message: 'Method not allowed' } });
   }
 
   try {
     const body = req.body;
-    const { stream, messages } = body;
+    const { model, messages, stream, temperature, max_tokens, tools, functions } = body;
     
-    console.log(`📝 Processing ${messages?.length || 0} messages, streaming: ${stream}`);
+    // Request validation
+    if (!model || !messages || !Array.isArray(messages)) {
+      return res.status(400).json({
+        error: {
+          message: 'Invalid request. Missing required fields.',
+          type: 'invalid_request_error',
+          code: 'missing_required_fields'
+        }
+      });
+    }
+
+    console.log(`📝 Processing ${messages.length} messages, streaming: ${stream}`);
     
-    // Content type 감지 (openai-api-mock과 동일한 방식)
+    // Error simulation (5% 확률)
+    const includeErrors = process.env.MOCK_INCLUDE_ERRORS === 'true';
+    if (includeErrors && Math.random() < 0.05) {
+      return res.status(429).json({
+        error: {
+          message: 'Rate limit exceeded',
+          type: 'rate_limit_error',
+          code: 'rate_limit_exceeded'
+        }
+      });
+    }
+
+    // Function/Tool calling 지원
+    if (tools || functions) {
+      const toolResponse = {
+        id: `chatcmpl-${generateId()}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model,
+        system_fingerprint: null,
+        choices: [{
+          index: 0,
+          message: {
+            role: 'assistant',
+            content: null,
+            tool_calls: tools ? [{
+              id: `call_${generateId()}`,
+              type: 'function',
+              function: {
+                name: tools[0].function.name,
+                arguments: '{}'
+              }
+            }] : null,
+            function_call: functions ? {
+              name: functions[0].name,
+              arguments: '{}'
+            } : null
+          },
+          logprobs: null,
+          finish_reason: 'tool_calls'
+        }],
+        usage: {
+          prompt_tokens: 57,
+          completion_tokens: 17,
+          total_tokens: 74
+        }
+      };
+      return res.json(toolResponse);
+    }
+
+    // Content type 감지
     const contentType = detectContentType(messages);
     console.log(`🎭 Detected content type: ${contentType}`);
     
-    // Mock 응답 생성 (openai-api-mock과 동일한 샘플 사용)
+    // Mock content 가져오기
     const mockContent = getContentSample(contentType);
     
+    // Latency simulation
+    const latency = parseInt(process.env.MOCK_LATENCY || '0');
+    if (latency > 0) {
+      await new Promise(resolve => setTimeout(resolve, latency));
+    }
+    
     if (stream) {
-      // 스트리밍 응답 헤더 설정
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      
-      // 응답을 청크로 나누어 스트리밍
-      const chunks = mockContent.match(/.{1,10}/g) || [mockContent];
-      
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        const response = createOpenAIResponse(chunk, true);
-        
-        // 마지막 청크에는 finish_reason 추가
-        if (i === chunks.length - 1) {
-          response.choices[0].finish_reason = 'stop';
-        }
-        
-        const data = `data: ${JSON.stringify(response)}\n\n`;
-        res.write(data);
-        
-        // 실제 스트리밍 느낌을 위한 지연
-        await new Promise(resolve => setTimeout(resolve, 50));
-      }
-      
-      res.write('data: [DONE]\n\n');
-      res.end();
+      // 스트리밍 응답
+      await handleStreaming(req, res, mockContent, contentType, { latency: 20 });
     } else {
       // 일반 응답
-      const response = createOpenAIResponse(mockContent, false);
+      const response = createChatResponse(mockContent, contentType, false);
       res.json(response);
     }
   } catch (err) {
     console.error('❌ Mock API Error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: {
+        message: 'Internal server error',
+        type: 'server_error',
+        code: 'internal_error'
+      }
+    });
   }
 }
