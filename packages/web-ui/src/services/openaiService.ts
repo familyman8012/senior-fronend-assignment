@@ -39,6 +39,17 @@ export class OpenAIService {
     onComplete,
   }: ChatStreamOptions): Promise<void> {
     try {
+      // 디버깅을 위한 로그 추가
+      console.log('OpenAIService.createChatStream called:', {
+        baseURL,
+        model,
+        messagesCount: messages.length,
+        timestamp: new Date().toISOString()
+      });
+      
+      // 추가 디버깅: alert로 API 호출 시도 확인
+      alert(`API 호출 시도! baseURL: ${baseURL}, messages: ${messages.length}개`);
+
       const stream = await openai.chat.completions.create({
         model,
         messages,
@@ -46,6 +57,8 @@ export class OpenAIService {
         max_tokens: maxTokens,
         stream: true,
       }, { signal });
+
+      console.log('OpenAI stream created successfully');
 
       let detectedContentType: string | undefined;
       

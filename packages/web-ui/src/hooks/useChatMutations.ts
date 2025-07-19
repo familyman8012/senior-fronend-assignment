@@ -32,7 +32,21 @@ export function useChatMutations() {
   // 모든 메시지 작업을 위한 통합된 뮤테이션
   const messageMutation = useMutation({
     mutationFn: async ({ type, assistantMessageId }: MessageMutationVariables) => {
-      if (!isOnline) {
+      // 디버깅을 위한 로그 추가
+      console.log('useChatMutations mutationFn called:', {
+        type,
+        assistantMessageId,
+        isOnline,
+        timestamp: new Date().toISOString()
+      });
+
+      // 임시 디버깅: 네트워크 체크 우회
+      console.log('Network status check:', { isOnline, navigator_onLine: navigator.onLine });
+      alert(`DEBUG: isOnline=${isOnline}, navigator.onLine=${navigator.onLine}`);
+      
+      // 임시로 네트워크 체크 비활성화
+      if (false) { // !isOnline를 false로 변경
+        console.log('Blocking API call because isOnline is false');
         const errorMessages = {
           send: '오프라인 상태입니다. 네트워크 연결을 확인해주세요.',
           regenerate: '오프라인 상태에서는 메시지를 재생성할 수 없습니다.',

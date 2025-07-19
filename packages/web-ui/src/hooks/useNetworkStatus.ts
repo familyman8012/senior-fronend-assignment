@@ -35,7 +35,7 @@ export function useNetworkStatus(): NetworkStatus {
                        navigator.mozConnection || 
                        navigator.webkitConnection;
 
-    setStatus({
+    const newStatus = {
       isOnline: navigator.onLine,
       isSlowConnection: connection ? 
         connection.effectiveType === 'slow-2g' || 
@@ -44,7 +44,18 @@ export function useNetworkStatus(): NetworkStatus {
       effectiveType: connection?.effectiveType,
       rtt: connection?.rtt,
       downlink: connection?.downlink,
+    };
+
+    // 디버깅을 위한 로그 추가
+    console.log('Network Status Update:', {
+      isOnline: newStatus.isOnline,
+      effectiveType: newStatus.effectiveType,
+      rtt: newStatus.rtt,
+      downlink: newStatus.downlink,
+      isSlowConnection: newStatus.isSlowConnection
     });
+
+    setStatus(newStatus);
   }, []);
 
   useEffect(() => {
