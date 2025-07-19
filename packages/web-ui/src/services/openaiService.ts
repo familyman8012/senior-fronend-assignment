@@ -8,8 +8,9 @@ let mockInitialized = false;
 async function initializeMockIfNeeded() {
   if (!mockInitialized) {
     try {
-      // Dynamic import로 mock 라이브러리 로드 (타입 에러 우회)
-      const mockModule = await import('../../../openai-api-mock/dist/index.js') as any;
+      // TypeScript 컴파일러를 완전히 우회하는 방법
+      const importPath = '../../../openai-api-mock/dist/index.js';
+      const mockModule = await eval(`import('${importPath}')`);
       const { mockOpenAIResponse } = mockModule;
       
       // Mock 활성화
