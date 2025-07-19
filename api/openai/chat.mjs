@@ -1,10 +1,17 @@
 import { getOpenAI, initializeMock } from './_init.mjs';
 
+// Edge Runtime 사용
+export const config = {
+  runtime: 'edge',
+};
+
 // POST /api/openai/chat  (프론트에선 /v1/chat/completions 로 rewrite)
-export default async function handler(req, res) {
-  console.log('🚀 API Handler called');
+export default async function handler(request) {
+  console.log('🚀 Edge API Handler called');
   
-  if (req.method !== 'POST') return res.status(405).end();
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
+  }
 
   try {
     console.log('🔄 Initializing mock...');
@@ -12,39 +19,62 @@ export default async function handler(req, res) {
     console.log('✅ Mock initialization completed');
   } catch (mockError) {
     console.error('❌ Mock initialization failed:', mockError);
-    return res.status(500).json({ 
+    return new Response(JSON.stringify({ 
       error: 'Mock initialization failed', 
       details: mockError instanceof Error ? mockError.message : String(mockError)
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
     });
   }
 
-  const { stream, ...body } = req.body;
-
   try {
+    const body = await request.json();
+    const { stream, ...openaiBody } = body;
+    
     const openai = getOpenAI();
     console.log('🤖 Using OpenAI client for API call');
     
     if (stream) {
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-
       const streamResp = await openai.chat.completions.create({
-        ...body,
+        ...openaiBody,
         stream: true,
       });
 
-      for await (const chunk of streamResp) {
-        res.write(`data: ${JSON.stringify(chunk)}\n\n`);
-      }
-      res.write('data: [DONE]\n\n');
-      res.end();
+      // Edge Functions에서 스트리밍
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of streamResp) {
+              const data = `data: ${JSON.stringify(chunk)}\n\n`;
+              controller.enqueue(new TextEncoder().encode(data));
+            }
+            controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+            controller.close();
+          } catch (error) {
+            controller.error(error);
+          }
+        }
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
     } else {
-      const resp = await openai.chat.completions.create(body);
-      res.json(resp);
+      const resp = await openai.chat.completions.create(openaiBody);
+      return new Response(JSON.stringify(resp), {
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
