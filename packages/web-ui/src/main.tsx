@@ -51,7 +51,7 @@ if ('serviceWorker' in navigator) {
             .then(() => console.log('[DEV] Service Worker unregistered for development'));
         });
       })
-      .catch(error => {
+      .catch(() => {
         console.log('[DEV] No service workers to unregister');
       });
   }
