@@ -57,15 +57,16 @@ export function useNetworkStatus(): NetworkStatus {
                        navigator.mozConnection || 
                        navigator.webkitConnection;
 
-    // PWA에서는 실제 네트워크 테스트 결과 우선 사용
+    // Service Worker 환경에서는 실제 네트워크 테스트 결과 우선 사용
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const isInWebAppiOS = (window.navigator as any).standalone === true;
     const isPWA = isStandalone || isInWebAppiOS;
+    const hasServiceWorker = 'serviceWorker' in navigator && navigator.serviceWorker?.controller;
     
     let actualOnlineStatus = navigator.onLine;
     
-    if (isPWA || !navigator.onLine) {
-      // PWA이거나 이미 오프라인으로 감지된 경우 실제 네트워크 테스트
+    // Service Worker가 있거나 이미 오프라인으로 감지된 경우 실제 네트워크 테스트
+    if (hasServiceWorker || !navigator.onLine) {
       actualOnlineStatus = await testRealNetworkConnection();
     }
 
@@ -80,10 +81,11 @@ export function useNetworkStatus(): NetworkStatus {
       downlink: connection?.downlink,
     };
 
-    // PWA에서 네트워크 상태 디버깅
-    console.log('[PWA Network] Status Update:', {
+    // 네트워크 상태 디버깅
+    console.log('[Network] Status Update:', {
       navigatorOnLine: navigator.onLine,
       realNetworkTest: actualOnlineStatus,
+      hasServiceWorker,
       isPWA,
       isStandalone,
       isInWebAppiOS,
@@ -122,23 +124,26 @@ export function useNetworkStatus(): NetworkStatus {
     window.addEventListener('offline', handleOffline);
     navigator.serviceWorker?.addEventListener('message', handleSWMessage);
 
-    // 주기적 네트워크 상태 체크 (PWA에서 중요)
+    // 스마트한 주기적 네트워크 상태 체크
     const intervalId = setInterval(() => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
       const isInWebAppiOS = (window.navigator as any).standalone === true;
+      const isPWA = isStandalone || isInWebAppiOS;
       
-      if (isStandalone || isInWebAppiOS) {
-        // PWA 환경에서는 Service Worker를 통한 네트워크 체크
+      // 온라인 상태에서는 PWA에서만 주기적 체크 (브라우저 이벤트가 덜 신뢰할 수 있음)
+      // 오프라인 상태에서는 웹/PWA 모두 복구 감지를 위해 체크
+      const shouldCheck = isPWA || !status.isOnline;
+      
+      if (shouldCheck) {
         if (navigator.serviceWorker?.controller) {
           navigator.serviceWorker.controller.postMessage({
             type: 'CHECK_NETWORK'
           });
         } else {
-          // SW가 없으면 기존 방식
           updateNetworkStatus();
         }
       }
-    }, 8000); // 8초마다 체크
+    }, 8000); // 8초마다 체크 (필요할 때만)
 
     // Listen to connection changes if available
     const connection = navigator.connection || 
