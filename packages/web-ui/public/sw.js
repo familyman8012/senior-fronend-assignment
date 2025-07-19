@@ -1,204 +1,173 @@
-const CACHE_NAME = 'chat-app-v4';
-const STATIC_CACHE_NAME = 'chat-app-static-v4';
+// 안전한 최소 PWA Service Worker
+// 오직 필수 오프라인 파일들만 캐싱, 앱 업데이트 우선
 
-// Essential files to cache immediately for offline functionality
-const ESSENTIAL_CACHE = [
+const CACHE_VERSION = 'safe-pwa-v1';
+const OFFLINE_CACHE = 'offline-essentials';
+
+// 오프라인 필수 파일들만 캐싱 (앱 코드는 제외)
+const OFFLINE_ESSENTIALS = [
   '/',
-  '/manifest.json',
   '/offline.html',
+  '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png'
 ];
 
+// 설치 시 필수 파일들만 캐싱
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing...');
+  console.log('[SW] Installing minimal safe PWA...');
   
   event.waitUntil(
-    Promise.all([
-      // Cache essential files
-      caches.open(STATIC_CACHE_NAME).then((cache) => {
-        console.log('Caching essential files...');
-        return cache.addAll(ESSENTIAL_CACHE);
-      }),
-      // Initialize runtime cache
-      caches.open(CACHE_NAME).then((cache) => {
-        console.log('Runtime cache initialized');
-        return Promise.resolve();
+    caches.open(OFFLINE_CACHE)
+      .then((cache) => {
+        console.log('[SW] Caching offline essentials');
+        return cache.addAll(OFFLINE_ESSENTIALS);
       })
-    ]).then(() => {
-      console.log('Service Worker installation complete');
-    })
-  );
-  
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
-});
-
-self.addEventListener('fetch', (event) => {
-  // Skip API requests - let them go to network (but handle errors gracefully)
-  if (event.request.url.includes('/api/') || event.request.url.includes('api.openai.com')) {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        // API request failed - return a meaningful error response
-        return new Response(
-          JSON.stringify({ 
-            error: 'Network unavailable', 
-            message: 'Please check your internet connection and try again.' 
-          }),
-          {
-            status: 503,
-            statusText: 'Service Unavailable',
-            headers: { 'Content-Type': 'application/json' }
-          }
-        );
+      .then(() => {
+        console.log('[SW] Installation complete');
+        // 즉시 활성화하되 기존 페이지는 영향받지 않도록
+        return self.skipWaiting();
       })
-    );
-    return;
-  }
-
-  // Handle navigation requests (HTML documents)
-  if (event.request.destination === 'document' || event.request.url.endsWith('.html') || event.request.url.endsWith('/')) {
-    event.respondWith(
-      // Network-first strategy for main app
-      fetch(event.request)
-        .then((response) => {
-          // Cache successful responses
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(STATIC_CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Offline fallback - try cached version first, then offline.html
-          return caches.match(event.request)
-            .then((cachedResponse) => {
-              return cachedResponse || caches.match('/offline.html');
-            });
-        })
-    );
-    return;
-  }
-
-  // Handle static assets with aggressive caching for app resources
-  const isAppResource = event.request.url.includes('/assets/') || 
-                       event.request.url.includes('.js') || 
-                       event.request.url.includes('.css') ||
-                       event.request.url.includes('.woff') ||
-                       event.request.url.includes('.woff2');
-
-  const isStaticAsset = event.request.url.includes('.png') || 
-                       event.request.url.includes('.jpg') || 
-                       event.request.url.includes('.jpeg') || 
-                       event.request.url.includes('.svg') ||
-                       event.request.url.includes('.ico') ||
-                       event.request.url.includes('.webp');
-
-  if (isAppResource || isStaticAsset) {
-    event.respondWith(
-      // Cache-first strategy for all static assets
-      caches.match(event.request)
-        .then((cachedResponse) => {
-          if (cachedResponse) {
-            console.log('Serving from cache:', event.request.url);
-            return cachedResponse;
-          }
-
-          // Not in cache, fetch from network
-          console.log('Fetching from network:', event.request.url);
-          return fetch(event.request)
-            .then((response) => {
-              // Cache successful responses immediately and aggressively
-              if (response && response.status === 200) {
-                const responseClone = response.clone();
-                
-                // Cache all app resources and static assets
-                const cacheName = isAppResource ? STATIC_CACHE_NAME : STATIC_CACHE_NAME;
-                
-                caches.open(cacheName).then((cache) => {
-                  console.log('Caching resource:', event.request.url);
-                  cache.put(event.request, responseClone);
-                });
-              }
-              
-              return response;
-            })
-            .catch((error) => {
-              console.log('Network failed for:', event.request.url, error);
-              
-              // Network failed, no cache available
-              if (event.request.destination === 'image' || isStaticAsset) {
-                // Return a simple 1x1 transparent pixel for images
-                return new Response(
-                  new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0, 0, 0, 144, 119, 83, 222, 0, 0, 0, 12, 73, 68, 65, 84, 8, 215, 99, 248, 15, 0, 1, 1, 1, 0, 24, 221, 141, 219, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]),
-                  { headers: { 'Content-Type': 'image/png' } }
-                );
-              }
-              
-              // For JS/CSS files that failed to load, return empty content to prevent app crash
-              if (isAppResource) {
-                const contentType = event.request.url.includes('.css') ? 'text/css' : 'application/javascript';
-                return new Response('/* Offline fallback */', { 
-                  headers: { 'Content-Type': contentType },
-                  status: 200 
-                });
-              }
-              
-              // For other resources, return 404
-              return new Response('Not Found', { status: 404 });
-            });
-        })
-    );
-    return;
-  }
-
-  // Handle other requests with network-first
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      return new Response('Offline', { status: 503 });
-    })
+      .catch((error) => {
+        console.error('[SW] Installation failed:', error);
+      })
   );
 });
 
+// 활성화 시 오래된 캐시 정리
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME, STATIC_CACHE_NAME];
-
+  console.log('[SW] Activating...');
+  
   event.waitUntil(
     Promise.all([
-      // Clean up old caches
+      // 오래된 캐시 삭제
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheWhitelist.indexOf(cacheName) === -1) {
-              console.log('Deleting old cache:', cacheName);
+            if (cacheName !== OFFLINE_CACHE && cacheName !== CACHE_VERSION) {
+              console.log('[SW] Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
           })
         );
-      })
-    ])
+      }),
+      // 모든 탭에서 즉시 제어권 획득
+      self.clients.claim()
+    ]).then(() => {
+      console.log('[SW] Activation complete');
+    })
   );
-  // Take control of all pages
-  self.clients.claim();
 });
 
-// Message handler for PWA install prompt
+// Fetch 처리 - 업데이트 우선 전략
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+  
+  // API 요청은 절대 건드리지 않음
+  if (url.pathname.startsWith('/api/') || 
+      url.hostname.includes('api.') ||
+      url.hostname.includes('openai.com')) {
+    return; // 네트워크로 직접
+  }
+  
+  // 앱 리소스(.js, .css)는 항상 네트워크 우선 (업데이트 즉시 반영)
+  if (url.pathname.includes('.js') || 
+      url.pathname.includes('.css') ||
+      url.pathname.includes('/assets/')) {
+    event.respondWith(
+      fetch(request)
+        .catch(() => {
+          // 네트워크 실패 시에만 빈 응답으로 앱 크래시 방지
+          const contentType = url.pathname.includes('.css') ? 'text/css' : 'application/javascript';
+          return new Response('/* Offline fallback */', {
+            headers: { 'Content-Type': contentType }
+          });
+        })
+    );
+    return;
+  }
+  
+  // HTML 문서는 네트워크 우선, 실패 시에만 캐시
+  if (request.destination === 'document' || 
+      url.pathname === '/' || 
+      url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // 성공한 응답은 캐시하지 않음 (항상 최신 유지)
+          return response;
+        })
+        .catch(() => {
+          // 네트워크 실패 시에만 캐시된 페이지 또는 오프라인 페이지
+          return caches.match('/').then((cached) => {
+            return cached || caches.match('/offline.html');
+          });
+        })
+    );
+    return;
+  }
+  
+  // 이미지와 기타 정적 자산은 캐시 우선
+  if (request.destination === 'image' || 
+      url.pathname.includes('.png') ||
+      url.pathname.includes('.jpg') ||
+      url.pathname.includes('.svg') ||
+      url.pathname.includes('.ico')) {
+    event.respondWith(
+      caches.match(request)
+        .then((cached) => {
+          if (cached) {
+            return cached;
+          }
+          
+          return fetch(request)
+            .then((response) => {
+              // 성공한 이미지는 캐시
+              if (response.status === 200) {
+                const responseClone = response.clone();
+                caches.open(OFFLINE_CACHE).then((cache) => {
+                  cache.put(request, responseClone);
+                });
+              }
+              return response;
+            })
+            .catch(() => {
+              // 1x1 투명 픽셀 반환
+              return new Response(
+                new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0, 0, 0, 144, 119, 83, 222, 0, 0, 0, 12, 73, 68, 65, 84, 8, 215, 99, 248, 15, 0, 1, 1, 1, 0, 24, 221, 141, 219, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]),
+                { headers: { 'Content-Type': 'image/png' } }
+              );
+            });
+        })
+    );
+    return;
+  }
+  
+  // 기타 모든 요청은 네트워크로
+});
+
+// 캐시 크기 관리 (25MB 제한)
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+  if (event.data && event.data.type === 'CLEAN_CACHE') {
+    event.waitUntil(cleanupCache());
   }
 });
 
-// Background sync for offline chat messages (if supported)
-if ('sync' in self.registration) {
-  self.addEventListener('sync', (event) => {
-    if (event.tag === 'background-sync-chat') {
-      event.waitUntil(
-        // Here you could implement retry logic for failed chat messages
-        console.log('Background sync triggered for chat messages')
-      );
+async function cleanupCache() {
+  try {
+    const cache = await caches.open(OFFLINE_CACHE);
+    const requests = await cache.keys();
+    
+    // 캐시 크기가 너무 크면 정리
+    if (requests.length > 50) {
+      console.log('[SW] Cache cleanup - too many entries');
+      const oldRequests = requests.slice(0, requests.length - 25);
+      await Promise.all(oldRequests.map(req => cache.delete(req)));
     }
-  });
+  } catch (error) {
+    console.error('[SW] Cache cleanup failed:', error);
+  }
 }
+
+console.log('[SW] Safe PWA Service Worker loaded');
