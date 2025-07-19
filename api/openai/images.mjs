@@ -1,8 +1,7 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { openai, initializeMock } from './_init';
+import { openai, initializeMock } from './_init.mjs';
 
 // POST /api/openai/images  (프론트에선 /v1/images/generations 로 rewrite)
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   // Mock 초기화
@@ -13,6 +12,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.json(resp);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: (err as Error).message });
+    res.status(500).json({ error: err.message });
   }
 }

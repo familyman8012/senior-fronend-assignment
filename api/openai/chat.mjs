@@ -1,8 +1,7 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { openai, initializeMock } from './_init';
+import { openai, initializeMock } from './_init.mjs';
 
 // POST /api/openai/chat  (프론트에선 /v1/chat/completions 로 rewrite)
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   console.log('🚀 API Handler called');
   
   if (req.method !== 'POST') return res.status(405).end();
@@ -32,7 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         stream: true,
       });
 
-      for await (const chunk of streamResp as any) {
+      for await (const chunk of streamResp) {
         res.write(`data: ${JSON.stringify(chunk)}\n\n`);
       }
       res.write('data: [DONE]\n\n');
@@ -43,6 +42,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: (err as Error).message });
+    res.status(500).json({ error: err.message });
   }
 }

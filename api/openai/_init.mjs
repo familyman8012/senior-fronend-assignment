@@ -1,7 +1,7 @@
-// api/openai/_init.ts
+// api/openai/_init.mjs
 import OpenAI from 'openai';
 
-let mockCtrl: any = null;
+let mockCtrl = null;
 let isInitialized = false;
 
 export async function initializeMock() {
