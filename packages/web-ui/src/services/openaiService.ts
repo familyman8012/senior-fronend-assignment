@@ -1,21 +1,38 @@
 import OpenAI from 'openai';
 import { ChatCompletionMessageParam, ChatCompletionChunk } from 'openai/resources/chat/completions';
 
-// OpenAI 클라이언트 구성
-// 개발 환경에서는 localhost:3001에서 모의 서버가 실행될 것으로 예상합니다.
-// 임시 테스트: 절대 경로 사용
-const defaultBaseURL = typeof window !== 'undefined' 
-  ? `${window.location.origin}/v1` 
-  : '/v1';
-const baseURL = import.meta.env.VITE_OPENAI_API_BASE ?? defaultBaseURL;
+// Mock 초기화 상태
+let mockInitialized = false;
 
-console.log('OpenAI baseURL:', baseURL);
+// Mock 초기화 함수
+async function initializeMockIfNeeded() {
+  if (!mockInitialized) {
+    try {
+      // Dynamic import로 mock 라이브러리 로드
+      const { mockOpenAIResponse } = await import('../../../openai-api-mock/dist/index.js');
+      
+      // Mock 활성화
+      mockOpenAIResponse(true, {
+        seed: 12345,
+        latency: 400,
+        logRequests: true, // 디버깅을 위해 활성화
+      });
+      
+      mockInitialized = true;
+      console.log('✅ Mock initialized successfully on client');
+      alert('✅ Mock 초기화 성공!');
+    } catch (error) {
+      console.error('❌ Failed to initialize mock:', error);
+      alert(`❌ Mock 초기화 실패: ${error}`);
+    }
+  }
+}
 
+// OpenAI 클라이언트 구성 (mock 사용을 위해 기본 baseURL 사용)
 const openai = new OpenAI({
-  apiKey:  'test-key',
-  baseURL,
+  apiKey: 'test-key',
   dangerouslyAllowBrowser: true,
-  maxRetries: 0, // OpenAI 클라이언트의 자체 재시도 비활성화
+  maxRetries: 0,
 });
 
 export interface ChatStreamOptions {
@@ -45,16 +62,15 @@ export class OpenAIService {
     onComplete,
   }: ChatStreamOptions): Promise<void> {
     try {
+      // Mock 초기화
+      await initializeMockIfNeeded();
+      
       // 디버깅을 위한 로그 추가
       console.log('OpenAIService.createChatStream called:', {
-        baseURL,
         model,
         messagesCount: messages.length,
         timestamp: new Date().toISOString()
       });
-      
-      // 추가 디버깅: alert로 API 호출 시도 확인
-      alert(`API 호출 시도! baseURL: ${baseURL}, messages: ${messages.length}개`);
 
       const stream = await openai.chat.completions.create({
         model,
