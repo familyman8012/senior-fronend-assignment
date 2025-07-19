@@ -29,8 +29,6 @@ export function useNetworkStatus(): NetworkStatus {
     isOnline: navigator.onLine,
     isSlowConnection: false,
   });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [realNetworkTest, setRealNetworkTest] = useState(true);
 
   // 실제 네트워크 연결 테스트 (PWA 환경용)
   const testRealNetworkConnection = useCallback(async () => {
@@ -47,11 +45,9 @@ export function useNetworkStatus(): NetworkStatus {
       
       clearTimeout(timeoutId);
       const isReallyOnline = response.ok;
-      setRealNetworkTest(isReallyOnline);
       return isReallyOnline;
     } catch (error) {
       console.log('[Network Test] Real network unavailable:', (error as Error).name);
-      setRealNetworkTest(false);
       return false;
     }
   }, []);
