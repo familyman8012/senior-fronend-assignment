@@ -8,9 +8,31 @@ let mockInitialized = false;
 async function initializeMockIfNeeded() {
   if (!mockInitialized) {
     try {
-      // TypeScript 컴파일러를 완전히 우회하는 방법
-      const importPath = '../../../openai-api-mock/dist/index.js';
-      const mockModule = await eval(`import('${importPath}')`);
+      // 여러 경로 시도
+      const possiblePaths = [
+        '@ai-chat/openai-api-mock',  // package name
+        '/packages/openai-api-mock/dist/index.js',  // 절대 경로
+        '../../../openai-api-mock/dist/index.js',   // 상대 경로
+      ];
+      
+      let mockModule = null;
+      let successPath = '';
+      
+      for (const path of possiblePaths) {
+        try {
+          console.log(`Trying to import mock from: ${path}`);
+          mockModule = await eval(`import('${path}')`);
+          successPath = path;
+          break;
+        } catch (err) {
+          console.log(`Failed to import from ${path}:`, err);
+        }
+      }
+      
+      if (!mockModule) {
+        throw new Error('Could not import mock module from any path');
+      }
+      
       const { mockOpenAIResponse } = mockModule;
       
       // Mock 활성화
@@ -21,8 +43,8 @@ async function initializeMockIfNeeded() {
       });
       
       mockInitialized = true;
-      console.log('✅ Mock initialized successfully on client');
-      alert('✅ Mock 초기화 성공!');
+      console.log(`✅ Mock initialized successfully from: ${successPath}`);
+      alert(`✅ Mock 초기화 성공! (경로: ${successPath})`);
     } catch (error) {
       console.error('❌ Failed to initialize mock:', error);
       alert(`❌ Mock 초기화 실패: ${error}`);
