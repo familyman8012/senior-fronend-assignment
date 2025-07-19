@@ -79,15 +79,15 @@ function createOpenAIResponse(content, streaming = false) {
 }
 
 // POST /api/openai/chat (프론트에선 /v1/chat/completions로 rewrite)
-export default async function handler(request) {
+export default async function handler(req, res) {
   console.log('🚀 Mock API Handler called');
   
-  if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+  if (req.method !== 'POST') {
+    return res.status(405).end();
   }
 
   try {
-    const body = await request.json();
+    const body = req.body;
     const { stream, messages } = body;
     
     console.log(`📝 Processing ${messages?.length || 0} messages, streaming: ${stream}`);
@@ -100,56 +100,39 @@ export default async function handler(request) {
     const mockContent = getContentSample(contentType);
     
     if (stream) {
-      // 스트리밍 응답
-      const streamContent = new ReadableStream({
-        async start(controller) {
-          try {
-            // 응답을 청크로 나누어 스트리밍
-            const chunks = mockContent.match(/.{1,10}/g) || [mockContent];
-            
-            for (let i = 0; i < chunks.length; i++) {
-              const chunk = chunks[i];
-              const response = createOpenAIResponse(chunk, true);
-              
-              // 마지막 청크에는 finish_reason 추가
-              if (i === chunks.length - 1) {
-                response.choices[0].finish_reason = 'stop';
-              }
-              
-              const data = `data: ${JSON.stringify(response)}\n\n`;
-              controller.enqueue(new TextEncoder().encode(data));
-              
-              // 실제 스트리밍 느낌을 위한 지연
-              await new Promise(resolve => setTimeout(resolve, 50));
-            }
-            
-            controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
-            controller.close();
-          } catch (error) {
-            controller.error(error);
-          }
+      // 스트리밍 응답 헤더 설정
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      
+      // 응답을 청크로 나누어 스트리밍
+      const chunks = mockContent.match(/.{1,10}/g) || [mockContent];
+      
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const response = createOpenAIResponse(chunk, true);
+        
+        // 마지막 청크에는 finish_reason 추가
+        if (i === chunks.length - 1) {
+          response.choices[0].finish_reason = 'stop';
         }
-      });
-
-      return new Response(streamContent, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      });
+        
+        const data = `data: ${JSON.stringify(response)}\n\n`;
+        res.write(data);
+        
+        // 실제 스트리밍 느낌을 위한 지연
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      
+      res.write('data: [DONE]\n\n');
+      res.end();
     } else {
       // 일반 응답
       const response = createOpenAIResponse(mockContent, false);
-      return new Response(JSON.stringify(response), {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      res.json(response);
     }
   } catch (err) {
     console.error('❌ Mock API Error:', err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    res.status(500).json({ error: err.message });
   }
 }

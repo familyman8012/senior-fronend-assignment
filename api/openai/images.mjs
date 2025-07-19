@@ -8,16 +8,15 @@ function generateMockImageUrl() {
 }
 
 // POST /api/openai/images (프론트에선 /v1/images/generations로 rewrite)
-export default async function handler(request) {
+export default async function handler(req, res) {
   console.log('🖼️ Mock Images API Handler called');
   
-  if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+  if (req.method !== 'POST') {
+    return res.status(405).end();
   }
 
   try {
-    const body = await request.json();
-    const { n = 1, size = '512x512' } = body;
+    const { n = 1, size = '512x512' } = req.body;
     
     console.log(`🎨 Generating ${n} mock images of size ${size}`);
     
@@ -31,14 +30,9 @@ export default async function handler(request) {
       data: images
     };
     
-    return new Response(JSON.stringify(response), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    res.json(response);
   } catch (err) {
     console.error('❌ Mock Images API Error:', err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    res.status(500).json({ error: err.message });
   }
 }
