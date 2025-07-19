@@ -33,9 +33,9 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true, // 프로덕션에서 console.log 제거
+        drop_console: false, // 임시로 console.log 유지
         drop_debugger: true, // debugger 문 제거
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.trace'],
+        pure_funcs: ['console.info', 'console.debug', 'console.trace'],
       },
       mangle: true,
       format: {

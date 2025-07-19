@@ -7,8 +7,6 @@ const defaultBaseURL = typeof window !== 'undefined'
   : '/v1';
 const baseURL = import.meta.env.VITE_OPENAI_API_BASE ?? defaultBaseURL;
 
-console.log('OpenAI baseURL:', baseURL);
-
 const openai = new OpenAI({
   apiKey: 'test-key',
   baseURL,
@@ -50,8 +48,6 @@ export class OpenAIService {
         messagesCount: messages.length,
         timestamp: new Date().toISOString()
       });
-      
-      alert(`API 호출 시도! baseURL: ${baseURL}, messages: ${messages.length}개`);
 
       const stream = await openai.chat.completions.create({
         model,
@@ -93,7 +89,6 @@ export class OpenAIService {
     } catch (error) {
       // 디버깅: 에러 상세 정보 출력
       console.error('OpenAI API Error:', error);
-      alert(`OpenAI API 에러! ${error instanceof Error ? error.message : String(error)}`);
       
       // AbortError 포함 모든 에러를 캐치
       if (error instanceof Error && error.name === 'AbortError') {

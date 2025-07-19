@@ -22,7 +22,11 @@
       "Bash(pnpm build:*)",
       "Bash(powershell:*)",
       "Bash(npm run build:*)",
-      "Bash(cmd /c:*)"
+      "Bash(cmd /c:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }
