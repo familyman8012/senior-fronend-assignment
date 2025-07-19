@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 declare global {
   interface NetworkInformation extends EventTarget {
@@ -29,6 +29,8 @@ export function useNetworkStatus(): NetworkStatus {
     isOnline: navigator.onLine,
     isSlowConnection: false,
   });
+  
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
 
   const updateNetworkStatus = useCallback(() => {
     const connection = navigator.connection || 
@@ -46,19 +48,40 @@ export function useNetworkStatus(): NetworkStatus {
       downlink: connection?.downlink,
     };
 
-    setStatus(newStatus);
+    // 상태가 실제로 변경된 경우에만 업데이트 (불필요한 리렌더링 방지)
+    setStatus(prevStatus => {
+      if (
+        prevStatus.isOnline === newStatus.isOnline &&
+        prevStatus.isSlowConnection === newStatus.isSlowConnection &&
+        prevStatus.effectiveType === newStatus.effectiveType
+      ) {
+        return prevStatus; // 상태가 동일하면 기존 상태 유지
+      }
+      return newStatus;
+    });
   }, []);
+
+  // 디바운스된 네트워크 상태 업데이트 (모바일에서 과도한 상태 변화 방지)
+  const debouncedUpdateNetworkStatus = useCallback(() => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
+    debounceTimeoutRef.current = setTimeout(() => {
+      updateNetworkStatus();
+    }, 200); // 200ms 디바운스
+  }, [updateNetworkStatus]);
 
   useEffect(() => {
     // 초기 네트워크 상태 체크
     updateNetworkStatus();
 
     const handleOnline = () => {
-      updateNetworkStatus();
+      debouncedUpdateNetworkStatus();
     };
 
     const handleOffline = () => {
-      updateNetworkStatus();
+      debouncedUpdateNetworkStatus();
     };
 
     window.addEventListener('online', handleOnline);
@@ -70,7 +93,7 @@ export function useNetworkStatus(): NetworkStatus {
                        navigator.webkitConnection;
 
     if (connection) {
-      connection.addEventListener('change', updateNetworkStatus);
+      connection.addEventListener('change', debouncedUpdateNetworkStatus);
     }
 
     return () => {
@@ -78,10 +101,15 @@ export function useNetworkStatus(): NetworkStatus {
       window.removeEventListener('offline', handleOffline);
       
       if (connection) {
-        connection.removeEventListener('change', updateNetworkStatus);
+        connection.removeEventListener('change', debouncedUpdateNetworkStatus);
+      }
+      
+      // 디바운스 타이머 정리
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [updateNetworkStatus]);
+  }, [updateNetworkStatus, debouncedUpdateNetworkStatus]);
 
   return status;
 }

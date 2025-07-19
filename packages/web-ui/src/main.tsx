@@ -23,15 +23,28 @@ if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.register('/sw.js');
         console.log('[PWA] Safe PWA service worker registered:', registration.scope);
         
-        // 업데이트 감지 및 자동 적용
+        // 업데이트 감지 및 안전한 적용 (모바일 무한 새로고침 방지)
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[PWA] New version available, updating...');
-                newWorker.postMessage({ type: 'SKIP_WAITING' });
-                window.location.reload();
+                console.log('[PWA] New version available');
+                
+                // 무한 새로고침 방지: 세션 중 한 번만 업데이트 허용
+                const hasUpdatedThisSession = sessionStorage.getItem('pwa-updated');
+                if (!hasUpdatedThisSession) {
+                  console.log('[PWA] Applying update...');
+                  sessionStorage.setItem('pwa-updated', 'true');
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  
+                  // 모바일에서 더 안전한 업데이트를 위해 짧은 지연 추가
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 100);
+                } else {
+                  console.log('[PWA] Update skipped - already updated this session');
+                }
               }
             });
           }
