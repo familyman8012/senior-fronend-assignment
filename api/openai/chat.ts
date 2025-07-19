@@ -3,10 +3,21 @@ import { openai, initializeMock } from './_init';
 
 // POST /api/openai/chat  (프론트에선 /v1/chat/completions 로 rewrite)
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log('🚀 API Handler called');
+  
   if (req.method !== 'POST') return res.status(405).end();
 
-  // Mock 초기화
-  await initializeMock();
+  try {
+    console.log('🔄 Initializing mock...');
+    await initializeMock();
+    console.log('✅ Mock initialization completed');
+  } catch (mockError) {
+    console.error('❌ Mock initialization failed:', mockError);
+    return res.status(500).json({ 
+      error: 'Mock initialization failed', 
+      details: mockError instanceof Error ? mockError.message : String(mockError)
+    });
+  }
 
   const { stream, ...body } = req.body;
 
