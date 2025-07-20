@@ -5,9 +5,10 @@ interface MessageInputProps {
   onSendMessage: (message: string) => void;
   isLoading?: boolean;
   disabled?: boolean;
+  onAbort?: () => void;
 }
 
-function MessageInput({ onSendMessage, isLoading, disabled }: MessageInputProps) {
+function MessageInput({ onSendMessage, isLoading, disabled, onAbort }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -75,36 +76,27 @@ function MessageInput({ onSendMessage, isLoading, disabled }: MessageInputProps)
         </div>
 
         <button
-          type="submit"
-          disabled={!message.trim() || disabled || isLoading}
+          type={isLoading ? "button" : "submit"}
+          onClick={isLoading ? onAbort : undefined}
+          disabled={!isLoading && (!message.trim() || disabled)}
           className={clsx(
             'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200',
             'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400',
-            !message.trim() || disabled || isLoading
+            isLoading
+              ? 'bg-gray-900 dark:bg-gray-700 text-white hover:bg-gray-800 dark:hover:bg-gray-600'
+              : !message.trim() || disabled
               ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
               : 'bg-gray-900 dark:bg-gray-700 text-white hover:bg-gray-800 dark:hover:bg-gray-600 hover:scale-110'
           )}
-          aria-label="메시지 전송"
+          aria-label={isLoading ? "스트리밍 중지" : "메시지 전송"}
         >
           {isLoading ? (
             <svg
-              className="animate-spin h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
+              className="w-3 h-3"
+              fill="currentColor"
+              viewBox="0 0 16 16"
             >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
+              <rect x="4" y="4" width="8" height="8" rx="0.5" />
             </svg>
           ) : (
             <svg 

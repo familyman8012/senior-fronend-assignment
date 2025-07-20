@@ -124,6 +124,7 @@ function ChatContainer() {
           onSendMessage={handleSendMessage}
           isLoading={isStreaming}
           disabled={!!currentStreamingId || !isOnline}
+          onAbort={cancelStream}
         />
       </div>
       
