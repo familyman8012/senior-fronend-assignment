@@ -22,20 +22,30 @@ if ('serviceWorker' in navigator) {
     // 프로덕션: 안전한 PWA 등록
     window.addEventListener('load', async () => {
       try {
-        // 기존 Service Worker가 있으면 먼저 정리
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-          if (registration.scope.includes(window.location.origin)) {
-            await registration.unregister();
-            console.log('[PWA] Old service worker unregistered');
+        // 기존 등록된 Service Worker 확인
+        const existingRegistrations = await navigator.serviceWorker.getRegistrations();
+        let existingRegistration = null;
+        
+        for (const registration of existingRegistrations) {
+          if (registration.scope === new URL('/', window.location.origin).href) {
+            existingRegistration = registration;
+            break;
           }
         }
         
-        // 새 Service Worker 등록
-        const registration = await navigator.serviceWorker.register('/sw.js');
-        console.log('[PWA] Safe PWA service worker registered:', registration.scope);
+        // Service Worker 등록 또는 업데이트
+        let registration;
+        if (existingRegistration) {
+          console.log('[PWA] Existing service worker found, checking for updates...');
+          registration = existingRegistration;
+          // 수동으로 업데이트 확인
+          await registration.update();
+        } else {
+          console.log('[PWA] Registering new service worker...');
+          registration = await navigator.serviceWorker.register('/sw.js');
+        }
         
-        // 업데이트 감지 및 적용 (모바일에서만 무한 새로고침 방지)
+        // 업데이트 감지 및 적용
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
@@ -45,30 +55,46 @@ if ('serviceWorker' in navigator) {
                 
                 const isMobile = isMobileDevice();
                 
+                // 마지막 업데이트 시간 확인
+                const lastUpdateKey = 'pwa-last-update';
+                const lastUpdate = localStorage.getItem(lastUpdateKey);
+                const now = Date.now();
+                const updateInterval = 60000; // 1분 최소 간격
+                
+                if (lastUpdate && (now - parseInt(lastUpdate)) < updateInterval) {
+                  console.log('[PWA] Update skipped - too soon since last update');
+                  return;
+                }
+                
+                // 업데이트 시간 기록
+                localStorage.setItem(lastUpdateKey, now.toString());
+                
                 if (isMobile) {
-                  // 모바일: 무한 새로고침 방지 로직 적용
-                  const hasUpdatedThisSession = sessionStorage.getItem('pwa-updated');
-                  if (!hasUpdatedThisSession) {
-                    console.log('[PWA] Applying update (mobile)...');
-                    sessionStorage.setItem('pwa-updated', 'true');
+                  // 모바일: 사용자에게 알림 후 업데이트
+                  console.log('[PWA] Prompting update on mobile...');
+                  if (confirm('새 버전이 있습니다. 업데이트하시겠습니까?')) {
                     newWorker.postMessage({ type: 'SKIP_WAITING' });
-                    
                     setTimeout(() => {
                       window.location.reload();
                     }, 100);
-                  } else {
-                    console.log('[PWA] Update skipped - already updated this session (mobile)');
                   }
                 } else {
-                  // 데스크탑: 즉시 업데이트 (기존 동작)
+                  // 데스크탑: 즉시 업데이트
                   console.log('[PWA] Applying update (desktop)...');
                   newWorker.postMessage({ type: 'SKIP_WAITING' });
-                  window.location.reload();
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 100);
                 }
               }
             });
           }
         });
+        
+        // 페이지가 Service Worker 제어를 받을 때까지 대기
+        if (!navigator.serviceWorker.controller) {
+          await navigator.serviceWorker.ready;
+        }
         
       } catch (error) {
         console.warn('[PWA] Service worker registration failed:', error);

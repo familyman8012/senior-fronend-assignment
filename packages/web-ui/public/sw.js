@@ -24,9 +24,8 @@ self.addEventListener('install', (event) => {
         return cache.addAll(OFFLINE_ESSENTIALS);
       })
       .then(() => {
-        console.log('[SW] Installation complete');
-        // 즉시 활성화하되 기존 페이지는 영향받지 않도록
-        return self.skipWaiting();
+        console.log('[SW] Installation complete, waiting for skipWaiting signal...');
+        // skipWaiting을 자동으로 호출하지 않음 - 클라이언트가 제어
       })
       .catch((error) => {
         console.error('[SW] Installation failed:', error);
