@@ -127,6 +127,19 @@ pre code {
   color: #1f2937;
 }
 
+.markdown-content th {
+  color: #fff !important;
+}
+
+.html-content label{
+  display: block;
+  width: 100%;
+}
+
+.html-content input {
+  width: 100%;
+}
+
 .dark .alim_box h4,
 .dark .alim_box p,
 .dark .alim_box ul,
